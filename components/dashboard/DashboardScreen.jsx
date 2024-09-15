@@ -1,16 +1,19 @@
-import { StyleSheet, View, ScrollView } from 'react-native'
-import React from 'react'
+import { StyleSheet, View, ScrollView, useColorScheme } from 'react-native'
 import NavigationBar from '../NavigationBar';
-import Colors from '../../utils/Colors';
+import useColors from '../../utils/Colors';
+import Exams from './Exams';
 
 const DashboardScreen = () => {
+
+  const isDark = useColorScheme() == "dark"
+  const Colors = useColors(isDark)
 
   return (
     <View style={{ flex: 1, backgroundColor:Colors.background }}>
         <ScrollView>
-
+          <Exams />
         </ScrollView>
-        <NavigationBar />
+        <NavigationBar Colors={Colors}/>
     </View>
   )
 }

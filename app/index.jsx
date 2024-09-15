@@ -6,7 +6,7 @@ import loadFonts from '../utils/font'
 const index = () => {
 
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  
+
   useEffect(() => {
     const loadApp = async () => {
         await loadFonts();

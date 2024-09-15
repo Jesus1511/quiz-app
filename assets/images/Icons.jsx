@@ -48,6 +48,22 @@ export const Close = ({ color, size }) => {
   );
 };
 
+export const Check = ({ color, size }) => {
+  return (
+    <Svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 -960 960 960"
+    >
+      <Path
+        d="M372-280 156-496l56-56 160 160 336-336 56 56-392 392Z"
+        fill={color}
+      />
+    </Svg>
+  );
+};
+
 export const Home = ({ color, size }) => {
     return (
         <Svg

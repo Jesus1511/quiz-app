@@ -9,11 +9,14 @@ import { AppContext } from '../../localStorage/LocalStorage';
 
 const { width, height } = Dimensions.get('window');
 
-const CreateScreen = () => {
-  const [name, setName] = useState('');
-  const { categorias, questions, setQuestions, createTest, db } = useContext(AppContext); // Categorías de contexto
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [time, setTime] = useState("");
+const CreateScreen = ({route}) => {
+
+  const {test} = route.params
+
+  const [name, setName] = useState(test.name);
+  const { categorias, questions, setQuestions, updateTest, db } = useContext(AppContext); // Categorías de contexto
+  const [selectedCategory, setSelectedCategory] = useState(test.categoria);
+  const [time, setTime] = useState(test.tiempo);
 
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false); // Estado del menú de categorías
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -26,6 +29,13 @@ const CreateScreen = () => {
   const slideAnim = useRef(new Animated.Value(0)).current; // Animación de deslizar
   const opacityAnim = useRef(new Animated.Value(0)).current;
   
+  useEffect(() => {
+      if (questions.length < 1) {
+        setQuestions(test.preguntas)
+      }
+  }, [route])
+  
+
   useEffect(() => {
     Animated.timing(slideAnim, {
       toValue: isCategoryMenuOpen ? 1 : 0,
@@ -92,9 +102,13 @@ const CreateScreen = () => {
       return
     }
     const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[]}
-    createTest(db, newTest)
-    setQuestions([])
-    navigation.navigate('Home');
+    updateTest(db,test.id, newTest)
+      .then(() => {
+        navigation.navigate('Home')
+        setQuestions([])
+      })
+    
+
   }
 
   return (
@@ -192,7 +206,7 @@ const CreateScreen = () => {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity onPress={handleSaveExam} style={globalStyles.GreenButton}>
-            <Text style={styles.textButton}>Crear Examen</Text>
+            <Text style={styles.textButton}>Actualizar Examen</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -204,7 +218,7 @@ const CreateScreen = () => {
             <TouchableOpacity onPress={() => setIsMenuOpen(false)} style={{ flex: 1 }} />
           </Animated.View>
           <Animated.View style={[styles.questionsMenu, { backgroundColor: Colors.green, transform: [{ translateY: slideAnim }] }]}>
-            <MenuQuestions setIsMenuOpen={setIsMenuOpen} questions={questions}/>
+            <MenuQuestions setIsMenuOpen={setIsMenuOpen} questions={questions} test={test}/>
           </Animated.View>
         </>
       )}
@@ -216,7 +230,7 @@ const CreateScreen = () => {
   );
 };
 
-const MenuQuestions = ({setIsMenuOpen, questions}) => {
+const MenuQuestions = ({setIsMenuOpen, questions, test}) => {
 
   const navigation = useNavigation()
 
@@ -227,7 +241,7 @@ const MenuQuestions = ({setIsMenuOpen, questions}) => {
       <>
 
       <View style={[styles.questionsMenu, {backgroundColor: Colors.green}]}>
-          <TouchableOpacity style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}  onPress={() => {navigation.navigate('Questions', {QuestIndex: 0, isEditing:false}); setIsMenuOpen(false)}}>
+          <TouchableOpacity style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}  onPress={() => {navigation.navigate('Questions', {QuestIndex: 0, isEditing: test}); setIsMenuOpen(false)}}>
               <Text style={[styles.menuTexts, {color: Colors.text,}]}>{questions.length > 1?"Editar Preguntas":"Rellenar Manualmente"}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>

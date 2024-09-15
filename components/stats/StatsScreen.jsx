@@ -1,17 +1,21 @@
-import { StyleSheet, Text, View, useColorScheme, ScrollView } from 'react-native'
-import React from 'react'
+import { StyleSheet, View, ScrollView, useColorScheme } from 'react-native'
 import NavigationBar from '../NavigationBar';
-import Colors from '../../utils/Colors';
+import useColors from '../../utils/Colors';
+
+import Theresholds from './Theresholds';
+import Exams from './Exams';
 
 const CreateScreen = () => {
-    const isDark = useColorScheme() === 'dark';
+    const isDark = useColorScheme() == "dark"
+    const Colors = useColors(isDark)
 
     return (
       <View style={{ flex: 1, backgroundColor:Colors.background }}>
           <ScrollView>
-  
+            <Theresholds />
+            <Exams />
           </ScrollView>
-          <NavigationBar />
+          <NavigationBar Colors={Colors}/>
       </View>
     )
 }

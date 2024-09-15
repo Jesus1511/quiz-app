@@ -31,9 +31,6 @@
       "expo-router",
       "expo-font"
     ],
-    "expo": {
-      "userInterfaceStyle": "automatic"
-    },
     "experiments": {
       "typedRoutes": true
     },
@@ -42,7 +39,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "3291c6da-a162-4220-a6ca-a42e56b3ebc5"
+        "projectId": "65b53319-36c6-436c-8918-ea8c4d0572fe"
       }
     }
   }

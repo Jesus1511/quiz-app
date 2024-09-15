@@ -1,12 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, useColorScheme } from 'react-native';
-import colors from '../utils/Colors';
+
+import useColors from '../utils/Colors';
 
 const Header = ({ title }) => {
 
+  const isDark = useColorScheme() == "dark"
+  const Colors = useColors(isDark)
+
   return (
-    <View style={[styles.header, { backgroundColor: colors.green }]}>
-      <Text style={styles.headerTitle}>{title}</Text>
+    <View style={[styles.header, { backgroundColor: Colors.green }]}>
+      <Text style={[styles.headerTitle,{color: Colors.text,}]}>{title}</Text>
     </View>
   );
 };
@@ -18,9 +22,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomLeftRadius: 200,   // Radio en la esquina inferior izquierda
     borderBottomRightRadius: 200,  // Radio en la esquina inferior derecha
+    elevation:5
   },
   headerTitle: {
-    color: colors.text,
     fontSize: 20,
     fontFamily: "Montserrat-SemiBold",
   },
