@@ -23,9 +23,10 @@ const CustomQuestHeader = ({ route }) => {
         },
         {
           text: 'Eliminar',
-          onPress: () => {
-            deleteTest(db, test.id)
-              .then (() => navigation.goBack())
+          onPress: async () => {
+            await deleteTest(db, test.id)
+            navigation.goBack();
+              
           },
           style: 'destructive', // opcional, pero útil para destacar acciones peligrosas
         },

@@ -87,7 +87,7 @@ const CreateScreen = ({route}) => {
     outputRange: [-150, 0], // Rango de desplazamiento vertical
   });
 
-  function handleSaveExam() {
+  async function handleSaveExam() {
     if (name == "") {
       ToastAndroid.show("Seleccione un nombre para el examen", ToastAndroid.LONG)
       return
@@ -102,11 +102,10 @@ const CreateScreen = ({route}) => {
       return
     }
     const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[]}
-    updateTest(db,test.id, newTest)
-      .then(() => {
-        navigation.navigate('Home')
-        setQuestions([])
-      })
+    await updateTest(db,test.id, newTest)
+    navigation.navigate('Home')
+    setQuestions([])
+
     
 
   }
