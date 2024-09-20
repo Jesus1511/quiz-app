@@ -4,6 +4,7 @@ import NavigationBar from '../NavigationBar';
 import { globalStyles, isDark } from '../../Styles/GlobalStyles';
 import { useNavigation } from '@react-navigation/native';
 import useColors from '../../utils/Colors';
+import { useSQLiteContext } from 'expo-sqlite';
 
 import { AppContext } from '../../localStorage/LocalStorage';
 
@@ -14,7 +15,8 @@ const CreateScreen = ({route}) => {
   const {test} = route.params
 
   const [name, setName] = useState(test.name);
-  const { categorias, questions, setQuestions, updateTest, db } = useContext(AppContext); // Categorías de contexto
+  const db = useSQLiteContext()
+  const { categorias, questions, setQuestions, updateTest} = useContext(AppContext); // Categorías de contexto
   const [selectedCategory, setSelectedCategory] = useState(test.categoria);
   const [time, setTime] = useState(test.tiempo);
 
@@ -87,7 +89,7 @@ const CreateScreen = ({route}) => {
     outputRange: [-150, 0], // Rango de desplazamiento vertical
   });
 
-  async function handleSaveExam() {
+  function handleSaveExam() {
     if (name == "") {
       ToastAndroid.show("Seleccione un nombre para el examen", ToastAndroid.LONG)
       return
@@ -102,10 +104,12 @@ const CreateScreen = ({route}) => {
       return
     }
     const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[]}
-    await updateTest(db,test.id, newTest)
-    navigation.navigate('Home')
-    setQuestions([])
+    updateTest(db,test.id, newTest)
+      .then(() => {
+        navigation.navigate('Home')
+        setQuestions([])
 
+      })
     
 
   }

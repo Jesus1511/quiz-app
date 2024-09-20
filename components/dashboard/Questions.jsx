@@ -1,26 +1,97 @@
-import { StyleSheet, Text, View, useColorScheme, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, View, useColorScheme, TouchableOpacity, ScrollView, Dimensions, AppState, Easing } from 'react-native';
 import useColors from '../../utils/Colors';
 import { useNavigation } from '@react-navigation/native';
-import { Audio } from 'expo-av'; // Importa Audio de expo-av
-
-import {Close, Check} from '../../assets/images/Icons'
+import { Audio } from 'expo-av'; 
+import { Close, Check } from '../../assets/images/Icons';
 import { alphabet } from '../../utils/Consts';
+import TimingModal from './TimingModal';
 
-const {width, height} = Dimensions.get("window")
+import { useContext } from 'react';
+import { AppContext } from '../../localStorage/LocalStorage';
+
+const { width, height } = Dimensions.get("window");
 
 const Questions = ({ route }) => {
   const [question, setQuestion] = useState(null);
+  const [responseColor, setResponseColor] = useState({ question: null, isTrue: false });
+  const [QuestIndex, setQuestIndex] = useState(null);
+
+  const { setIntento } = useContext(AppContext)
+
   const isDark = useColorScheme() == 'dark';
   const Colors = useColors(isDark);
-  const [responseColor, setResponseColor] = useState({ question: null, isTrue: false });
   const navigation = useNavigation();
-  const { QuestIndex } = route.params;
+
+  const { Index, mode, orden, test } = route.params;
   const { preguntas } = route.params.test;
 
-  const [sound, setSound] = useState(); // Estado para almacenar el sonido
+  const { currentTime, isEnd, setRunning, isTenPorcent } = TimingModal({ maxTime: test.tiempo, Index });
 
-  // Función para reproducir sonido
+  const barWidth = useRef(new Animated.Value(0)).current
+  const [opacity] = useState(new Animated.Value(0)); 
+  const colorAnimation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (currentTime > 0) { 
+      Animated.timing(barWidth, {
+        toValue: Math.min(((currentTime / test.tiempo) * 100) * 2.75, 270),
+        duration: 250,
+        useNativeDriver: false,  // Cambiado a false
+      }).start();
+      
+    } else {
+      
+      barWidth.setValue(0);
+    }
+  }, [currentTime]);
+  
+  useEffect(() => {
+    if (isTenPorcent) { 
+      Animated.timing(colorAnimation, {
+        toValue: 1,  
+        duration: (currentTime * 0.1) * 1000,  
+        useNativeDriver: false, 
+      }).start();
+    } else {
+      colorAnimation.setValue(0)
+    }
+  }, [isTenPorcent]);
+
+  useEffect(() => {
+    if (isEnd) {
+      playSound(false);
+
+      setIntento((intento) => {
+        return [...intento, {isCorrect: false, time:test.tiempo}]
+      })
+
+      if (Index < preguntas.length) {
+        navigation.navigate('AnswerQuestions', { Index: Index + 1, test, mode, orden });
+      } else {
+        navigation.navigate('QuestEnd', { test });
+      }
+
+    }
+  }, [isEnd]);
+
+  useEffect(() => {
+    if (mode === "random" && orden && orden[Index - 1] !== undefined) {
+      setQuestIndex(orden[Index - 1]);
+    } else if (!orden) {
+      setQuestIndex(Index);
+    }
+
+    // Animar la opacidad al mostrar nuevos elementos
+    Animated.timing(opacity, {
+      toValue: 1, // Se anima hasta opacidad 1
+      duration: 250, // Duración de la animación
+      useNativeDriver: true,
+    }).start();
+  }, [route]);
+
+  const [sound, setSound] = useState();
+
   async function playSound(isCorrect) {
     const soundFile = isCorrect ? require('../../assets/correct.mp3') : require('../../assets/incorrect.mp3');
     const { sound } = await Audio.Sound.createAsync(soundFile);
@@ -28,47 +99,100 @@ const Questions = ({ route }) => {
     await sound.playAsync();
   }
 
-  // Liberar el sonido cuando ya no se necesite
   useEffect(() => {
-    return sound
-      ? () => {
-          sound.unloadAsync();
-        }
-      : undefined;
+    return sound ? () => {
+      sound.unloadAsync();
+    } : undefined;
   }, [sound]);
 
   function handleResponse(response, index) {
-    const newResponse = { question: index, isTrue: response };
-    setResponseColor(newResponse);
+    if (responseColor.question == null) {
+      setRunning(false)
+      const newResponse = { question: index, isTrue: response };
+      setResponseColor(newResponse);
+  
+      playSound(response);
 
-    // Reproduce el sonido según la respuesta
-    playSound(response);
-
-    setTimeout(() => {
-      if (preguntas.length !== QuestIndex) {
-        navigation.navigate('AnswerQuestions', { QuestIndex: QuestIndex + 1, test: route.params.test });
-      } else {
-        navigation.navigate('QuestEnd', { test: route.params.test });
-      }
-    }, 1000);
+      setIntento((intento) => {
+        return [...intento, {isCorrect: newResponse.isTrue, time:currentTime}]
+      })
+  
+      setTimeout(() => {
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 250,
+          easing: Easing.ease,
+          useNativeDriver: true,
+        }).start(() => {
+          if (Index < preguntas.length) {
+            navigation.navigate('AnswerQuestions', { Index: Index + 1, test, mode, orden });
+          } else {
+            navigation.navigate('QuestEnd', { test: route.params.test });
+          }
+        });
+      }, 500);
+    }
   }
-
+  
   function calculateColor(index, isTrue) {
     if (responseColor.question == index && responseColor.isTrue) {
-      return Colors.winnerGreen
+      return Colors.winnerGreen;
     } else if (responseColor.question == index && !responseColor.isTrue) {
-      return Colors.red
+      return Colors.red;
     } else if (index !== responseColor.question && isTrue && responseColor.question !== null) {
-      return Colors.winnerGreen
+      return Colors.winnerGreen;
     } else {
-      return Colors.green3
+      return Colors.green3;
     }
   }
 
   useEffect(() => {
-    setQuestion(preguntas[QuestIndex - 1]);
+    if (QuestIndex) {
+      setQuestion(preguntas[QuestIndex - 1]);
+    }
     setResponseColor({ question: null, isTrue: false });
-  }, [route]);
+
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 250,
+      easing: Easing.ease,
+      useNativeDriver: true, 
+    }).start();
+  }, [QuestIndex]);
+
+  function getFontSize(text) {
+    const length = text.length;
+    if (length < 10) return 25;
+    if (length < 50) return 20;
+    if (length < 150) return 18;
+    return 15; // Tamaño mínimo para textos largos
+  }
+
+  const [appState, setAppState] = useState(AppState.currentState);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState) => {
+      if (appState.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('La app ha vuelto al primer plano');
+      }
+      if (nextAppState === 'background') {
+        navigation.goBack()
+        setIntento([])
+      }
+      setAppState(nextAppState);
+    };
+
+    const appStateListener = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      appStateListener.remove();
+    };
+  }, [appState]);
+
+  const backgroundColor = colorAnimation.interpolate({
+    inputRange: [0, 1], 
+    outputRange: [Colors.green, Colors.red], 
+  });
 
   const styles = DynamicStyles(Colors);
 
@@ -76,45 +200,43 @@ const Questions = ({ route }) => {
     <ScrollView style={styles.main}>
       <View style={{ flexDirection: "row", justifyContent: "space-evenly", alignItems: "center" }}>
         <View style={styles.bar}>
-          <View style={styles.barContent} />
+          <Animated.View style={[styles.barContent, { width: barWidth, backgroundColor}]} />
         </View>
         <Text style={{ color: Colors.text, fontSize: 25, fontFamily: "Montserrat-Bold" }}>N° {QuestIndex}</Text>
       </View>
+
       <Text style={{ color: Colors.text, fontSize: 30, marginTop: 20, textAlign: "center", marginTop: 20 }}>
         {question?.pregunta}
       </Text>
-      <View style={styles.questions}>
+
+      <Animated.View style={[styles.questions, { opacity }]}>
         {question?.opciones.map((opcion, index) => (
-          <View key={index} style={{width, flexDirection:"row", alignItems:"top", justifyContent:"space-evenly"}}>
-            <Text style={{textAlign:"left",fontSize:18, color:Colors.text, marginTop:20, fontFamily:"Montserrat-Medium"}}>{alphabet[index]} )</Text>
-            {console.log(calculateColor(index, opcion.isTrue))}
+          <View key={index} style={{ width, flexDirection: "row", alignItems: "top", justifyContent: "space-evenly" }}>
+            <Text style={{ textAlign: "left", fontSize: 18, color: Colors.text, marginTop: 20, fontFamily: "Montserrat-Medium" }}>{alphabet[index]}</Text>
             <TouchableOpacity
               onPress={() => handleResponse(opcion.isTrue, index)}
-
               style={[
                 styles.question,
-                { backgroundColor: calculateColor(index, opcion.isTrue)},
+                { backgroundColor: calculateColor(index, opcion.isTrue) },
               ]}
             >
-
               {responseColor.question !== null && opcion.isTrue && (
-                <View style={{position:"absolute", left:10, top:20}}>
-                  <Check color={Colors.text} size={40}/>
+                <View style={{ position: "absolute", left: 8, top: 20 }}>
+                  <Check color={Colors.text} size={35} />
                 </View>
               )}
               {responseColor.question == index && !opcion.isTrue && (
-                <View style={{position:"absolute", left:10, top:20}}>
-                  <Close color={Colors.text} size={40}/>
+                <View style={{ position: "absolute", left: 8, top: 20 }}>
+                  <Close color={Colors.text} size={35} />
                 </View>
               )}
-
-              <Text style={styles.questionText}>{opcion.opcion}</Text>
+              <Text style={[styles.questionText, { fontSize: getFontSize(opcion.opcion) }]}>{opcion.opcion}</Text>
             </TouchableOpacity>
           </View>
-
         ))}
-      </View>
-      <View style={{height:100}}/>
+      </Animated.View>
+
+      <View style={{ height: 100 }} />
     </ScrollView>
   );
 };
@@ -137,9 +259,7 @@ const DynamicStyles = (Colors) =>
     },
     barContent: {
       height: 25,
-      width: "40%",
       borderRadius: 20,
-      backgroundColor: Colors.green,
     },
     questions: {
       alignItems: "center",
@@ -148,7 +268,8 @@ const DynamicStyles = (Colors) =>
     question: {
       backgroundColor: Colors.green,
       borderRadius: 15,
-      padding: 20,
+      paddingVertical: 20,
+      paddingHorizontal: 35,
       width: "86%",
       marginVertical: 10,
     },

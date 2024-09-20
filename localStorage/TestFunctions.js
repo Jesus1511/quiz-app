@@ -1,24 +1,31 @@
 import * as SQLite from 'expo-sqlite';
 import { useState } from 'react';
 import { ToastAndroid, Alert } from 'react-native';
+import * as Crypto from 'expo-crypto';
 
 const TestFunctions = () => {
   const [tests, setTests] = useState();
 
-  function generateRandomId() {
-    const digits = 50;
-    const randomNumber = BigInt('1' + '0'.repeat(digits - 1)) * BigInt(Math.floor(Math.random() * 10));
-    return randomNumber;
+  // Función para generar un UUID
+  async function generateRandomId() {
+    const randomBytes = await Crypto.getRandomBytesAsync(16);
+    let id = '';
+    for (let i = 0; i < randomBytes.length; i++) {
+      id += ('0' + randomBytes[i].toString(16)).slice(-2);
+      if (i === 3 || i === 5 || i === 7 || i === 9) id += '-';
+    }
+    id = `${id.substring(0, 8)}-${id.substring(8, 12)}-${id.substring(12, 16)}-${id.substring(16, 20)}-${id.substring(20, 32)}`;
+    return id;
   }
 
   // Función para inicializar la base de datos y la tabla
   const initializeDatabase = async () => {
     try {
-      const db = await SQLite.openDatabaseAsync('testDatabase.db');
+      const db = await SQLite.openDatabaseAsync('database.db');
       await db.execAsync(`
         PRAGMA journal_mode = WAL;
         CREATE TABLE IF NOT EXISTS Test (
-          id TEXT PRIMARY KEY,
+          id TEXT,
           tiempo INTEGER,
           name TEXT,
           categoria TEXT,
@@ -27,7 +34,6 @@ const TestFunctions = () => {
         );
       `);
       console.log("Tabla 'Test' creada");
-      return db;
     } catch (e) {
       console.log("Error al inicializar la base de datos:", e);
     }
@@ -36,18 +42,20 @@ const TestFunctions = () => {
   // Función para crear un test
   const createTest = async (db, testData) => {
     try {
+      const newId = await generateRandomId();
+      console.log("newId:",newId)
       await db.runAsync(
         `INSERT INTO Test (id, tiempo, name, categoria, preguntas, intentos) VALUES (?, ?, ?, ?, ?, ?)`,
         [
-          generateRandomId(),
+          newId,
           testData.tiempo,
           testData.name,
           testData.categoria,
           JSON.stringify(testData.preguntas),
-          JSON.stringify(testData.intentos)
+          JSON.stringify(testData.intentos),
         ]
       );
-      getAllTests(db);
+      await getAllTests(db);
       console.log("Test creado");
     } catch (e) {
       console.log("Error al crear el test:", e);
@@ -58,7 +66,7 @@ const TestFunctions = () => {
   const getAllTests = async (db) => {
     try {
       const rows = await db.getAllAsync('SELECT * FROM Test');
-      const updatedRows = rows.map(row => ({
+      const updatedRows = rows.map((row) => ({
         ...row,
         preguntas: row.preguntas ? JSON.parse(row.preguntas) : [],
         intentos: row.intentos ? JSON.parse(row.intentos) : [],
@@ -70,57 +78,106 @@ const TestFunctions = () => {
     }
   };
 
+  // Función para actualizar un test
   const updateTest = async (db, id, updatedData) => {
-      ToastAndroid.show("updateTest is executing", ToastAndroid.SHORT);
-      try {
-          ToastAndroid.show("updateTest pre runAsync", ToastAndroid.SHORT);
-          ToastAndroid.show("datos de la funcion:", ToastAndroid.SHORT);
-          ToastAndroid.show(id.toString(), ToastAndroid.SHORT);
-          await db.runAsync(
-              `UPDATE Test SET tiempo = ?, name = ?, categoria = ?, preguntas = ?, intentos = ? WHERE id = ?`,
-              [
-                  updatedData.tiempo,
-                  updatedData.name,
-                  updatedData.categoria,
-                  JSON.stringify(updatedData.preguntas),
-                  JSON.stringify(updatedData.intentos),
-                  id
-              ]
-          );
-          ToastAndroid.show("updateTest post runAsync", ToastAndroid.SHORT);
-          ToastAndroid.show("Test actualizado", ToastAndroid.LONG);
-          getAllTests(db);
-          ToastAndroid.show("post getAllTests", ToastAndroid.SHORT);
-      } catch (e) {
-          Alert.alert("Error al actualizar el test:", e);
+    try {
+      console.log("Generando ID:", id.toString());
+      // Verifica si el ID existe en la base de datos antes de intentar actualizar
+      const checkId = await db.getFirstAsync(
+        `SELECT id FROM Test WHERE id = ?`,
+        [id]
+      );
+  
+      if (!checkId) {
+        ToastAndroid.show("Test no encontrado", ToastAndroid.SHORT);
+        return;
       }
+  
+      await db.runAsync(
+        `UPDATE Test SET tiempo = ?, name = ?, categoria = ?, preguntas = ?, intentos = ? WHERE id = ?`,
+        [
+          updatedData.tiempo,
+          updatedData.name,
+          updatedData.categoria,
+          JSON.stringify(updatedData.preguntas),
+          JSON.stringify(updatedData.intentos),
+          id
+        ]
+      );
+  
+      ToastAndroid.show("Test actualizado", ToastAndroid.LONG);
+      await getAllTests(db);
+    } catch (e) {
+      Alert.alert("Error al actualizar el test:", e.message);
+    }
   };
   
-  // Función para eliminar un test
+// Función para actualizar un test
+const updateTrys = async (db, id, updatedData) => {
+  try {
+    console.log("Generando ID:", id.toString());
+
+    const test = await db.getFirstAsync(
+      `SELECT intentos FROM Test WHERE id = ?`,
+      [id]
+    );
+
+    if (!test) {
+      ToastAndroid.show("Test no encontrado", ToastAndroid.SHORT);
+      return;
+    }
+
+    const oldIntentos = JSON.parse(test.intentos || "[]");
+
+    const newIntentos = [...oldIntentos, updatedData];
+
+    await db.runAsync(
+      `UPDATE Test SET intentos = ? WHERE id = ?`,
+      [
+        JSON.stringify(newIntentos),
+        id
+      ]
+    );
+    await getAllTests(db);
+  } catch (e) {
+    Alert.alert("Error al actualizar el test:", e.message);
+  }
+};
+
+
   const deleteTest = async (db, id) => {
-      ToastAndroid.show("deleteTest is executing", ToastAndroid.SHORT);
-      try {
-          ToastAndroid.show("deleteTest pre runAsync", ToastAndroid.SHORT);
-          ToastAndroid.show("datos de la funcion:", ToastAndroid.SHORT);
-          ToastAndroid.show(id.toString(), ToastAndroid.SHORT);
-          await db.runAsync(
-              `DELETE FROM Test WHERE id = ?`,
-              [id]
-          );
-          ToastAndroid.show("deleteTest post runAsync", ToastAndroid.SHORT);
-          ToastAndroid.show("Test eliminado", ToastAndroid.LONG);
-          getAllTests(db);
-          ToastAndroid.show("post getAllTests", ToastAndroid.SHORT);
-      } catch (e) {
-          Alert.alert("Error al eliminar el test:", e);
+    try {
+      console.log("Generando ID:", id.toString());
+      // Verifica si el ID existe en la base de datos antes de intentar eliminarlo
+      const checkId = await db.getFirstAsync(
+        `SELECT id FROM Test WHERE id = ?`,
+        [id]
+      );
+  
+      if (!checkId) {
+        ToastAndroid.show("Test no encontrado", ToastAndroid.SHORT);
+        return;
       }
+  
+      await db.runAsync(
+        `DELETE FROM Test WHERE id = ?`,
+        [id]
+      );
+  
+      ToastAndroid.show("Test eliminado", ToastAndroid.LONG);
+      await getAllTests(db);
+    } catch (e) {
+      Alert.alert("Error al eliminar el test:", e.message);
+    }
   };
   
+
   // Función para eliminar todos los tests
   const deleteAllTests = async (db) => {
     try {
       await db.runAsync(`DELETE FROM Test`);
       console.log("Todos los tests eliminados");
+      await getAllTests(db); // Actualizar la lista de tests después de eliminarlos
     } catch (e) {
       console.log("Error al eliminar todos los tests:", e);
     }
@@ -134,6 +191,7 @@ const TestFunctions = () => {
     getAllTests,
     deleteAllTests,
     generateRandomId,
+    updateTrys,
     tests,
   };
 };

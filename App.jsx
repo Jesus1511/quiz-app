@@ -14,6 +14,7 @@ import QuestEnd from './components/dashboard/QuestEnd';
 import Categorias from './components/create/Categorias';
 import CustomHeader from './components/create/CustomHeader';
 import EditScreen from './components/edit/EditScreen'
+import CustomQuestionsHeader from './components/dashboard/CustomQuestionsHeader';
 
 import LocalStorage from './localStorage/LocalStorage';
 import useColors from './utils/Colors';
@@ -74,7 +75,7 @@ const App = () => {
                 name="AnswerQuestions"
                 component={AnswerQuestions}
                 options={({route}) => ({
-                    header: () => <SecondHeader route={route} button={2} title="Añadir Preguntas Manualmente" />,  // Usamos el componente personalizado
+                    header: () => <CustomQuestionsHeader route={route}/>
                   })}
               />
               <Stack.Screen

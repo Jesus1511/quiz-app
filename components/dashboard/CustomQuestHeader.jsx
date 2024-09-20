@@ -4,12 +4,14 @@ import { useNavigation } from '@react-navigation/native';
 import useColors from '../../utils/Colors'
 import { Ionicons } from '@expo/vector-icons'; 
 import { AppContext } from '../../localStorage/LocalStorage';
+import { useSQLiteContext } from 'expo-sqlite';
 
 const CustomQuestHeader = ({ route }) => {
   const isDark = useColorScheme() === 'dark';
   const Colors = useColors(isDark)
 
-  const {deleteTest, db} = useContext(AppContext)
+  const db = useSQLiteContext()
+  const { deleteTest } = useContext(AppContext)
   const { test } = route.params
 
   function handleDelete () {
@@ -23,10 +25,11 @@ const CustomQuestHeader = ({ route }) => {
         },
         {
           text: 'Eliminar',
-          onPress: async () => {
-            await deleteTest(db, test.id)
-            navigation.goBack();
-              
+          onPress: () => {
+            deleteTest(db, test.id)
+              .then (() => {
+                navigation.goBack();
+              })
           },
           style: 'destructive', // opcional, pero útil para destacar acciones peligrosas
         },

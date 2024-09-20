@@ -4,14 +4,18 @@ import NavigationBar from '../NavigationBar';
 import { globalStyles, isDark } from '../../Styles/GlobalStyles';
 import { useNavigation } from '@react-navigation/native';
 import useColors from '../../utils/Colors';
+import { useSQLiteContext } from 'expo-sqlite';
 
 import { AppContext } from '../../localStorage/LocalStorage';
 
 const { width, height } = Dimensions.get('window');
 
 const CreateScreen = () => {
+
+  const db = useSQLiteContext()
+
   const [name, setName] = useState('');
-  const { categorias, questions, setQuestions, createTest, db } = useContext(AppContext); // Categorías de contexto
+  const { categorias, questions, setQuestions, createTest } = useContext(AppContext); // Categorías de contexto
   const [selectedCategory, setSelectedCategory] = useState('');
   const [time, setTime] = useState("");
 

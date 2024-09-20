@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View, useColorScheme, TouchableOpacity, ScrollView, Animated, Dimensions} from 'react-native'
+import { StyleSheet, Text, View, useColorScheme, TouchableOpacity, ScrollView, Animated, Dimensions, ToastAndroid} from 'react-native'
 import React, {useEffect, useRef, useState} from 'react'
 import useColors from '../../utils/Colors'
 import { globalStyles } from '../../Styles/GlobalStyles'
 import { useNavigation } from '@react-navigation/native'
 import { preguntas } from '../../utils/Consts'
+import { formatDate } from '../../utils/bestTry'
 
 const {width, height} = Dimensions.get('window')
 
@@ -49,10 +50,6 @@ const StartTestScreen = ({route}) => {
       }
     }, [isMenuOpen]);
 
-    function handleNavigate (test) {
-        navigation.navigate('StartTest',{test})
-    }
-
     const styles = DynamicStyles(Colors)
 
   return (
@@ -61,7 +58,7 @@ const StartTestScreen = ({route}) => {
         <View style={styles.examsContainer}>
 
            <View   style={styles.exam}>
-               {!test.done && (
+               {test.intentos.length < 1 && (
                    <View style={styles.newPoint}/>
              )}
 
@@ -73,21 +70,23 @@ const StartTestScreen = ({route}) => {
           {test.intentos.length >= 1 && (
           <View>
           <Text style={{fontSize:20, marginBottom:20, fontFamily:"Montserrat-SemiBold", color:Colors.text, textAlign:"center"}}>Pruebas Anteriores</Text>
-          {test.intentos.map((intento, index) => (
-            <View style={styles.intento} key={index}>
-              <View style={styles.textasoContainer}>
-                <Text style={styles.textasoTitulo}>Fecha</Text>
-                <Text style={styles.textaso}>24 enero 2024</Text>
+          {test.intentos.slice().reverse().map((intento, index) => (
+            index < 3 && (
+              <View style={styles.intento} key={index}>
+                <View style={styles.textasoContainer}>
+                  <Text style={styles.textasoTitulo}>Fecha</Text>
+                  <Text style={[styles.textaso, {maxWidth:120}]}>{formatDate(intento.date)}</Text>
+                </View>
+                <View style={styles.textasoContainer}>
+                  <Text style={styles.textasoTitulo}>Nota</Text>
+                  <Text style={styles.textaso}>{intento.nota}/{test.preguntas.length}</Text>
+                </View>
+                <View style={styles.textasoContainer}>
+                  <Text style={styles.textasoTitulo}>Tiempo</Text>
+                  <Text style={styles.textaso}>{intento.bestTime.toFixed(2)} minutos</Text>
+                </View>
               </View>
-              <View style={styles.textasoContainer}>
-                <Text style={styles.textasoTitulo}>Nota</Text>
-                <Text style={styles.textaso}>{intento.nota}/{test.preguntas.length}</Text>
-              </View>
-              <View style={styles.textasoContainer}>
-                <Text style={styles.textasoTitulo}>Tiempo</Text>
-                <Text style={styles.textaso}>{intento.bestTime} minutos</Text>
-              </View>
-            </View>
+            )
           ))}
       </View>
         )}
@@ -96,7 +95,7 @@ const StartTestScreen = ({route}) => {
         </View>
       </ScrollView>
       <View style={{alignItems:"center", paddingBottom: 30}}>
-        <TouchableOpacity onPress={() => setIsMenuOpen(true)} style={[globalStyles.GreenButton, {elevation:5}]}>
+        <TouchableOpacity onPress={() => setIsMenuOpen(true)} style={[globalStyles.GreenButton, {elevation:20}]}>
           <Text style={{color:Colors.text, textAlign:"center", fontSize:20, fontFamily:"Montserrat-SemiBold"}}>Empezar Test</Text>
         </TouchableOpacity>
       </View>
@@ -124,13 +123,24 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
 
   const styles = DynamicStyles(Colors)
 
+  function generateRandomArray(num) {
+    const arr = Array.from({ length: num }, (_, i) => i + 1);
+    
+    for (let i = arr.length - 1; i > 0; i--) {
+      const randomIndex = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[randomIndex]] = [arr[randomIndex], arr[i]];
+    }
+    
+    return arr;
+  }
+
   return (
     <>
       <View style={[styles.questionsMenu, { backgroundColor: Colors.green }]}>
         <TouchableOpacity
           onPress={() => {
             setIsMenuOpen(false)
-            navigation.navigate('AnswerQuestions', { QuestIndex: 1, test });
+            navigation.navigate('AnswerQuestions', { Index: 1, test, mode:"random", orden:generateRandomArray(test.preguntas.length) });
           }}
           style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
         >
@@ -139,16 +149,22 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
         <TouchableOpacity
           onPress={() => {
             setIsMenuOpen(false)
-            navigation.navigate('AnswerQuestions', { QuestIndex: 1, test });
+            navigation.navigate('AnswerQuestions', { Index: 1, test, mode:"complete", orden:null });
           }}
           style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
         >
           <Text style={[styles.menuTexts, { color: Colors.text }]}>Examen Completo</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => {
-            setIsMenuOpen(false)
-            navigation.navigate('AnswerQuestions', { QuestIndex: 1, test });
+            if (test.intentos.length > 1) {
+              setIsMenuOpen(false)
+              navigation.navigate('AnswerQuestions', { QuestIndex: 1, test, mode:"focus", orden:null });
+            } else {
+              ToastAndroid.show("Debes realizar el test al menos una vez para hacerlo en modo enfocado", ToastAndroid.LONG)
+            }
+
           }}
           style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
         >
@@ -199,8 +215,9 @@ const DynamicStyles = (Colors) => StyleSheet.create({
       backgroundColor:Colors.green,
       elevation:5,
       marginVertical:8,
-      width:"90%",
+      width:330,
       borderRadius:15,
+      justifyContent:"center",
       flexDirection: "row",
     },
     textasoTitulo: {

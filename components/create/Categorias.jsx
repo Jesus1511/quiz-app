@@ -22,25 +22,28 @@ const AddCategoryScreen = () => {
   };
 
   const handleDeleteCategory = (categoryId) => {
+    console.log("categoryId:", categoryId);
     Alert.alert(
-        'Confirmación',
-        '¿Estás seguro de que deseas eliminar esta categoría?',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Eliminar', onPress: () => deleteCategory(categoryId) }, // Eliminar la categoría al confirmar
-        ],
-        { cancelable: true }
-      );
+      'Confirmación',
+      '¿Estás seguro de que deseas eliminar esta categoría?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Eliminar', onPress: () => deleteCategory(categoryId) }, // Eliminar la categoría al confirmar
+      ],
+      { cancelable: true }
+    );
   };
+  
 
-  const renderCategory = ({ item, key }) => (
-    <View key={key} style={styles.categoryItem}>
+  const renderCategory = ({ item, index }) => (
+    <View style={styles.categoryItem}>
       <Text style={{ color: Colors.text }}>{item.value}</Text>
-      <TouchableOpacity onPress={() => handleDeleteCategory(key)}>
-        <Trash color={Colors.text} size={23}/>
+      <TouchableOpacity onPress={() => handleDeleteCategory(index)}>
+        <Trash color={Colors.text} size={23} />
       </TouchableOpacity>
     </View>
   );
+  
 
   const styles = DynamicStyles(Colors);
 
