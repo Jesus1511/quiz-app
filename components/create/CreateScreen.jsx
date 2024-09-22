@@ -95,7 +95,7 @@ const CreateScreen = () => {
       ToastAndroid.show("Seleccione las preguntas y respuestas ", ToastAndroid.LONG)
       return
     }
-    const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[]}
+    const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[], fails:[]}
     createTest(db, newTest)
     setQuestions([])
     navigation.navigate('Home');

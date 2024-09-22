@@ -1,17 +1,29 @@
 import { StyleSheet, Text, View, useColorScheme } from 'react-native'
-import {useContext} from 'react'
+import {useContext, useEffect, useState} from 'react'
 import useColors from '../../utils/Colors'
 
 import { AppContext } from '../../localStorage/LocalStorage'
+import { getBestTrys } from '../../utils/bestTry'
 
 const Theresholds = () => {
+    const [categories, setCategories] = useState([]);
 
-    const { categorias } = useContext(AppContext);
+    const { categorias, tests } = useContext(AppContext);
+    
+    const isDark = useColorScheme() === "dark";
+    const Colors = useColors(isDark);
+    const styles = DynamicStyles(Colors);
 
-    const isDark = useColorScheme() == "dark"
-    const Colors = useColors(isDark)
+    useEffect(() => {
+        const newCategorias = categorias.map((category) => {
+            const relevantTests = tests.filter(test => category.value === test.categoria);
+            const bestScore = relevantTests.length > 0 ? getBestTrys(relevantTests.flatMap(test => test.intentos)).bestScore : 0;
+            return { ...category, thereshold: bestScore };
+        });
+        console.log(newCategorias)
+        setCategories(newCategorias);
+    }, [categorias, tests]); 
 
-    const styles = DynamicStyles(Colors)
 
   return (
     <View>
@@ -19,7 +31,7 @@ const Theresholds = () => {
             <Text style={styles.titulo}>Porcentaje de acierto por categoria</Text>
         </View>
         <View style={{paddingRight:20, paddingLeft:10}}>
-            {categorias.map((categoria, index) => (
+            {categories.map((categoria, index) => (
                 <View style={styles.categoriasContainer} key={index}>
                     <Text style={styles.categoriaName}>{categoria.value}</Text>
 
@@ -27,7 +39,7 @@ const Theresholds = () => {
                         <View style={[styles.barContent, {width: 2*categoria.thereshold}]}/>
                     </View>
 
-                    <Text style={{color:Colors.text, marginLeft:5}}>{categoria.thereshold}%</Text>
+                    <Text style={{color:Colors.text, marginLeft:5, width:35}}>{categoria.thereshold}%</Text>
                 </View>
             ))}
         </View>

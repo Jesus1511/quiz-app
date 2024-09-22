@@ -10,6 +10,7 @@ const AppContext = createContext();
 const LocalStorage = ({ children }) => {
   const [questions, setQuestions] = useState([]);
   const [intento, setIntento] = useState([]);
+  const [failedQuests, setFailedQuests] = useState([]);
 
   const { categorias, addCategory, deleteCategory } = CategoriasModel();
   const { createTest, updateTest, getAllTests, deleteTest, deleteAllTests, updateTrys, tests } = TestFunctions();
@@ -25,7 +26,6 @@ const LocalStorage = ({ children }) => {
         console.log("Error:", e);
       }
     }
-
     if (db) {
       fetchData();
     }
@@ -57,7 +57,9 @@ const LocalStorage = ({ children }) => {
         deleteCategory,
 
         intento,
-        setIntento
+        setIntento,
+        failedQuests,
+        setFailedQuests
       }}
     >
       {children}
@@ -70,7 +72,7 @@ const App = ({children}) => {
   const {initializeDatabase} = TestFunctions()
 
   return (
-  <SQLiteProvider databaseName="database.db" onInit={initializeDatabase}>
+  <SQLiteProvider databaseName="databases.db" onInit={initializeDatabase}>
     <LocalStorage>
       {children}
     </LocalStorage>

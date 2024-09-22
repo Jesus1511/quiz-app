@@ -103,7 +103,7 @@ const CreateScreen = ({route}) => {
       ToastAndroid.show("Seleccione las preguntas y respuestas ", ToastAndroid.LONG)
       return
     }
-    const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[]}
+    const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[], fails:[]}
     updateTest(db,test.id, newTest)
       .then(() => {
         navigation.navigate('Home')

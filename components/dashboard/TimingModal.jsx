@@ -41,7 +41,8 @@ const TimingModal = ({ maxTime, Index }) => {
         currentTime,
         isEnd,
         setRunning,
-        isTenPorcent
+        isTenPorcent,
+        setIsEnd
     };
 };
 

@@ -3,14 +3,13 @@ import React, {useEffect, useRef, useState} from 'react'
 import useColors from '../../utils/Colors'
 import { globalStyles } from '../../Styles/GlobalStyles'
 import { useNavigation } from '@react-navigation/native'
-import { preguntas } from '../../utils/Consts'
 import { formatDate } from '../../utils/bestTry'
+import { preguntas } from '../../utils/Consts'
 
 const {width, height} = Dimensions.get('window')
 
 const StartTestScreen = ({route}) => {
 
-    const navigation = useNavigation()
     const { test } = route.params
 
     const isDark = useColorScheme() == "dark"
@@ -65,6 +64,8 @@ const StartTestScreen = ({route}) => {
                <Text style={styles.examProps}>Categoria: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{test.categoria}</Text></Text>
                <Text style={styles.examProps}>Preguntas: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{test.preguntas.length}</Text></Text>
                <Text style={styles.examProps}>Duración: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{Math.floor((test.tiempo*test.preguntas.length)/60)} min</Text></Text>
+
+               <Text style={styles.examProps}>Fails: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{JSON.stringify(test.fails[0]?.count)}</Text></Text>
          </View>
 
           {test.intentos.length >= 1 && (
@@ -79,11 +80,11 @@ const StartTestScreen = ({route}) => {
                 </View>
                 <View style={styles.textasoContainer}>
                   <Text style={styles.textasoTitulo}>Nota</Text>
-                  <Text style={styles.textaso}>{intento.nota}/{test.preguntas.length}</Text>
+                  <Text style={styles.textaso}>{Math.ceil((intento.nota * test.preguntas.length) / 100)}/{test.preguntas.length}</Text>
                 </View>
                 <View style={styles.textasoContainer}>
                   <Text style={styles.textasoTitulo}>Tiempo</Text>
-                  <Text style={styles.textaso}>{intento.bestTime.toFixed(2)} minutos</Text>
+                  <Text style={styles.textaso}>{intento.bestTime?.toFixed(2)} secs</Text>
                 </View>
               </View>
             )
@@ -116,64 +117,147 @@ const StartTestScreen = ({route}) => {
   )
 }
 
+
 const MenuQuestions = ({ test, setIsMenuOpen }) => {
   const navigation = useNavigation();
   const isDark = useColorScheme() === 'dark';
   const Colors = useColors(isDark);
 
-  const styles = DynamicStyles(Colors)
+  const [open, setOpen] = useState(false);
+  
+  // Animación para la altura
+  const heightAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (open) {
+      // Cuando se abre, animamos a 80 de altura
+      Animated.timing(heightAnim, {
+        toValue: 120,
+        duration: 100, // Duración de la animación
+        useNativeDriver: false, // No puede ser true, ya que animamos height
+      }).start();
+    } else {
+      // Cuando se cierra, la altura vuelve a 0
+      Animated.timing(heightAnim, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [open, heightAnim]);
+
+  const styles = DynamicStyles(Colors);
 
   function generateRandomArray(num) {
     const arr = Array.from({ length: num }, (_, i) => i + 1);
-    
     for (let i = arr.length - 1; i > 0; i--) {
       const randomIndex = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[randomIndex]] = [arr[randomIndex], arr[i]];
-    }
-    
+    } 
     return arr;
   }
 
   return (
     <>
-      <View style={[styles.questionsMenu, { backgroundColor: Colors.green }]}>
-        <TouchableOpacity
-          onPress={() => {
-            setIsMenuOpen(false)
-            navigation.navigate('AnswerQuestions', { Index: 1, test, mode:"random", orden:generateRandomArray(test.preguntas.length) });
-          }}
-          style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
-        >
-          <Text style={[styles.menuTexts, { color: Colors.text }]}>Modo Aleatorio</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            setIsMenuOpen(false)
-            navigation.navigate('AnswerQuestions', { Index: 1, test, mode:"complete", orden:null });
-          }}
-          style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
-        >
-          <Text style={[styles.menuTexts, { color: Colors.text }]}>Examen Completo</Text>
-        </TouchableOpacity>
+      <View style={[styles.questionsMenu, { backgroundColor: Colors.green,}]}>
+        <View style={{height:300, width, justifyContent: 'space-evenly', alignItems: 'center', marginBottom:5}}>
+          <TouchableOpacity
+            onPress={() => {
+              setIsMenuOpen(false);
+              navigation.navigate('AnswerQuestions', { Index: 1, test, mode: "random", orden: generateRandomArray(test.preguntas.length) });
+            }}
+            style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
+          >
+            <Text style={[styles.menuTexts, { color: Colors.text }]}>Modo Aleatorio</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={() => {
+              setIsMenuOpen(false);
+              navigation.navigate('AnswerQuestions', { Index: 1, test, mode: "complete", orden: null });
+            }}
+            style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
+          >
+            <Text style={[styles.menuTexts, { color: Colors.text }]}>Examen Completo</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            if (test.intentos.length > 1) {
-              setIsMenuOpen(false)
-              navigation.navigate('AnswerQuestions', { QuestIndex: 1, test, mode:"focus", orden:null });
-            } else {
-              ToastAndroid.show("Debes realizar el test al menos una vez para hacerlo en modo enfocado", ToastAndroid.LONG)
-            }
+          <TouchableOpacity
+            onPress={() => {
+              if (test.intentos.length >= 1 && test.fails.length >= 1) {
+                //setIsMenuOpen(false)
+                //navigation.navigate('AnswerQuestions', { Index: 1, test: {...test, preguntas:test.fails}, mode:"focus", orden:null });
+                setOpen(!open);
+              } else if (test.intentos.length > 1 && test.fails.length < 1) {
+                ToastAndroid.show("No haz cometido ningun error anteriormente en este examen, felicidades", ToastAndroid.LONG);
+              }  else {
+                ToastAndroid.show("Debes realizar el test al menos una vez para hacerlo en modo enfocado", ToastAndroid.LONG);
+              }
+            }}
+            style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
+          >
+            <Text style={[styles.menuTexts, { color: Colors.text}]}>Examen Enfocado</Text>
+          </TouchableOpacity>
+        </View>
+        {/* Animamos este View con el height controlado */}
+        <Animated.View style={{ height: heightAnim, width,}}>
+          <Text style={[styles.menuTexts, { color: Colors.text, marginBottom:15 }]}>Solo con preguntas falladas...</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-evenly", paddingHorizontal: 20 }}>
+            <TouchableOpacity
+              onPress={() => {
+                const filteredFails = test.fails.filter(item => item.count > 0 && item.count < 4);
+                if (filteredFails.length < 1) {
+                  ToastAndroid.show("no haz fallado ninguna pregunta entre 1 y 3 veces", ToastAndroid.SHORT)
+                  return
+                }
+                navigation.navigate('AnswerQuestions', { Index: 1, test: { ...test, preguntas: filteredFails }, mode: "focus", orden: null });
+                setIsMenuOpen(false);
+                setOpen(!open);
+              }}
+              style={[styles.miniMenuButtons, { backgroundColor: Colors.darkGreen }]}
+            >
+              <Text style={[styles.menuTexts, { color: Colors.text }]}>1 - 3 veces</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => {
+                const filteredFails = test.fails.filter(item => item.count >= 3 && item.count < 6);
+                if (filteredFails.length < 1) {
+                  ToastAndroid.show("No haz fallado ninguna pregunta entre 3 y 5 veces", ToastAndroid.SHORT)
+                  return
+                }
+                navigation.navigate('AnswerQuestions', { Index: 1, test: { ...test, preguntas: filteredFails }, mode: "focus", orden: null });
+                setIsMenuOpen(false);
+                setOpen(!open);
+              }}
+              style={[styles.miniMenuButtons, { backgroundColor: Colors.darkGreen }]}
+            >
+              <Text style={[styles.menuTexts, { color: Colors.text }]}>3 - 5 veces</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => {
+                const filteredFails = test.fails.filter(item => item.count >= 5);
+                if (filteredFails.length < 1) {
+                  ToastAndroid.show("No haz fallado ninguna pregunta +5 veces", ToastAndroid.SHORT)
+                  return
+                }
+                navigation.navigate('AnswerQuestions', { Index: 1, test: { ...test, preguntas: filteredFails }, mode: "focus", orden: null });
+                setIsMenuOpen(false);
+                setOpen(!open);
+              }}
+              style={[styles.miniMenuButtons, { backgroundColor: Colors.darkGreen }]}
+            >
+              <Text style={[styles.menuTexts, { color: Colors.text }]}>+5  veces</Text>
+            </TouchableOpacity>
+          </View>
 
-          }}
-          style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
-        >
-          <Text style={[styles.menuTexts, { color: Colors.text }]}>Examen Enfocado</Text>
-        </TouchableOpacity>
+
+        </Animated.View>
       </View>
     </>
   );
 };
+
 
 export default StartTestScreen
 
@@ -217,8 +301,9 @@ const DynamicStyles = (Colors) => StyleSheet.create({
       marginVertical:8,
       width:330,
       borderRadius:15,
-      justifyContent:"center",
+      justifyContent:"start",
       flexDirection: "row",
+      paddingLeft:10
     },
     textasoTitulo: {
       fontSize:16,
@@ -243,6 +328,14 @@ const DynamicStyles = (Colors) => StyleSheet.create({
       borderRadius: 20,
       elevation: 7
     },
+    miniMenuButtons: {
+      height: 75,
+      width: 80,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 10,
+      elevation: 7,
+    },
     menuTexts: {
       fontFamily: 'Montserrat-SemiBold',
       fontSize: 18,
@@ -250,9 +343,7 @@ const DynamicStyles = (Colors) => StyleSheet.create({
     },
     questionsMenu: {
       width,
-      height: 400,
-      paddingTop: 15,
-      paddingBottom: 50,
+      paddingVertical:15,
       justifyContent: 'space-evenly',
       alignItems: 'center',
       position: 'absolute',

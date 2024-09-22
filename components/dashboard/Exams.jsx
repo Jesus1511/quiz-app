@@ -3,6 +3,7 @@ import React, { useRef, useContext } from 'react'
 import useColors from '../../utils/Colors'
 import { AppContext } from '../../localStorage/LocalStorage'
 import { useNavigation } from '@react-navigation/native'
+import { getBestTrys } from '../../utils/bestTry'
 
 const Exams = () => {
 
@@ -85,7 +86,7 @@ const ExamCard = ({ exam, handleNavigate, Colors }) => {
                     <Text style={styles.examProps}>Preguntas: <Text style={{ color: Colors.text, fontFamily: "Montserrat-Medium" }}>{exam.preguntas.length}</Text></Text>
                     <Text style={styles.examProps}>Duración: <Text style={{ color: Colors.text, fontFamily: "Montserrat-Medium" }}>{Math.floor((exam.tiempo * exam.preguntas.length) / 60)} min</Text></Text>
                     {exam.intentos.length >= 1 && (
-                        <Text style={styles.examProps}>Mejor Nota: <Text style={{ color: Colors.text, fontFamily: "Montserrat-Medium" }}>{exam.intentos[0].nota}/{exam.preguntas.length}</Text></Text>
+                        <Text style={styles.examProps}>Mejor Nota: <Text style={{ color: Colors.text, fontFamily: "Montserrat-Medium" }}>{Math.ceil((getBestTrys(exam.intentos).bestScore * exam.preguntas.length) / 100)}/{exam.preguntas.length}</Text></Text>
                     )}
                 </View>
             </Animated.View>

@@ -18,7 +18,7 @@ const QuestEnd = ({route}) => {
     const { test } = route.params
     const db = useSQLiteContext()
 
-    const { intento, setIntento, updateTrys } = useContext(AppContext)
+    const { intento, setIntento, updateTrys, failedQuests, setFailedQuests } = useContext(AppContext)
 
     const [score, setScore] = useState(0)
     const [scoreImprove, setScoreImprove] = useState(0)
@@ -42,23 +42,26 @@ const QuestEnd = ({route}) => {
 
         if (test.intentos.length >= 1) {
             const {bestTime, bestScore} = getBestTrys(test.intentos)
-            setScoreImprove(calcularPorcentajeDiferencia(bestScore, totalScore))
-            setTimeInprove(bestTime - totalTime)
+            setScoreImprove(calcularPorcentajeDiferencia(((bestScore * intento.length) / 100), totalScore))
+            setTimeInprove(calcularPorcentajeDiferencia(totalTime, bestTime))
         }
     },[intento])
 
-    function calcularPorcentajeDiferencia(valorViejo, valorNuevo) {
-        const diferencia = valorNuevo - valorViejo;
-        const porcentajeDiferencia = (diferencia / valorViejo) * 100;
+    function calcularPorcentajeDiferencia(oldValue, newValue) {
+        const difference = newValue - oldValue;
+        const percentageDifference = (difference / oldValue) * 100;
+        return percentageDifference;
     
-        return porcentajeDiferencia;
     }
 
+
+
     function handleSave () {
-        const newTry = { nota: score, bestTime: time, date: Date.now() };
-        updateTrys(db, test.id ,newTry);        
+        const newTry = { nota: (score / intento.length) * 100, bestTime: time, date: Date.now() };
+        updateTrys(db, test.id ,newTry, failedQuests);        
 
         setIntento([]);
+        setFailedQuests([])
         navigation.navigate('Home');
     }
 
@@ -107,7 +110,7 @@ return (
                         <View style={styles.bar}>
                             <View style={[styles.barContent, { width: scoreImprove < 0? 0 : scoreImprove*2.6 }]} />
                         </View>
-                        <Text style={styles.statValue}>{scoreImprove}%</Text>
+                        <Text style={styles.statValue}>{scoreImprove?.toFixed(0)}%</Text>
                     </View>
                 </Animated.View>
             )}
@@ -115,7 +118,7 @@ return (
             <Animated.View style={[styles.stat, { opacity: opacityValues[2] }]}>
                 <Text style={styles.statTitle}>Tiempo Promedio por pregunta</Text>
                 <View style={styles.timeContainer}>
-                    <Text style={styles.timeText}>{time.toFixed(2)}sg / {test.tiempo}sg</Text>
+                    <Text style={styles.timeText}>{time?.toFixed(2)}sg / {test.tiempo}sg</Text>
                 </View>
             </Animated.View>
             {test.intentos.length >= 1 && (
@@ -125,7 +128,7 @@ return (
                         <View style={styles.bar}>
                             <View style={[styles.barContent, { width: (time > 0 && timeInprove / time >= 0) ? (timeInprove / time) * 2.6 : 0 }]} />
                         </View>
-                        <Text style={styles.statValue}>{timeInprove.toFixed(1)}sg</Text>
+                        <Text style={styles.statValue}>{timeInprove?.toFixed(0)}%</Text>
                     </View>
                 </Animated.View>
             )}

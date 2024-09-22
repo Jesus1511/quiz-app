@@ -21,7 +21,7 @@ const TestFunctions = () => {
   // Función para inicializar la base de datos y la tabla
   const initializeDatabase = async () => {
     try {
-      const db = await SQLite.openDatabaseAsync('database.db');
+      const db = await SQLite.openDatabaseAsync('databases.db');
       await db.execAsync(`
         PRAGMA journal_mode = WAL;
         CREATE TABLE IF NOT EXISTS Test (
@@ -30,7 +30,8 @@ const TestFunctions = () => {
           name TEXT,
           categoria TEXT,
           preguntas TEXT,
-          intentos TEXT
+          intentos TEXT,
+          fails TEXT
         );
       `);
       console.log("Tabla 'Test' creada");
@@ -45,7 +46,7 @@ const TestFunctions = () => {
       const newId = await generateRandomId();
       console.log("newId:",newId)
       await db.runAsync(
-        `INSERT INTO Test (id, tiempo, name, categoria, preguntas, intentos) VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO Test (id, tiempo, name, categoria, preguntas, intentos, fails) VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           newId,
           testData.tiempo,
@@ -53,6 +54,7 @@ const TestFunctions = () => {
           testData.categoria,
           JSON.stringify(testData.preguntas),
           JSON.stringify(testData.intentos),
+          JSON.stringify(testData.fails)
         ]
       );
       await getAllTests(db);
@@ -70,6 +72,7 @@ const TestFunctions = () => {
         ...row,
         preguntas: row.preguntas ? JSON.parse(row.preguntas) : [],
         intentos: row.intentos ? JSON.parse(row.intentos) : [],
+        fails: row.fails ? JSON.parse(row.fails) : [],
       }));
       setTests(updatedRows);
       console.log("Tests obtenidos", updatedRows);
@@ -94,13 +97,14 @@ const TestFunctions = () => {
       }
   
       await db.runAsync(
-        `UPDATE Test SET tiempo = ?, name = ?, categoria = ?, preguntas = ?, intentos = ? WHERE id = ?`,
+        `UPDATE Test SET tiempo = ?, name = ?, categoria = ?, preguntas = ?, intentos = ?, fails = ?, WHERE id = ?`,
         [
           updatedData.tiempo,
           updatedData.name,
           updatedData.categoria,
           JSON.stringify(updatedData.preguntas),
           JSON.stringify(updatedData.intentos),
+          JSON.stringify(updatedData.fails),
           id
         ]
       );
@@ -113,12 +117,13 @@ const TestFunctions = () => {
   };
   
 // Función para actualizar un test
-const updateTrys = async (db, id, updatedData) => {
+const updateTrys = async (db, id, updatedData, fails) => {
   try {
     console.log("Generando ID:", id.toString());
 
+    // Obtener las columnas 'intentos' y 'fails' de la base de datos
     const test = await db.getFirstAsync(
-      `SELECT intentos FROM Test WHERE id = ?`,
+      `SELECT intentos, fails FROM Test WHERE id = ?`,
       [id]
     );
 
@@ -127,17 +132,25 @@ const updateTrys = async (db, id, updatedData) => {
       return;
     }
 
+    // Parsear los datos de 'intentos' y 'fails'
     const oldIntentos = JSON.parse(test.intentos || "[]");
+    const oldFails = JSON.parse(test.fails || "[]");
 
+    // Agregar los nuevos intentos y fallos
     const newIntentos = [...oldIntentos, updatedData];
+    const newFails = [...oldFails, ...fails];
 
+    // Actualizar la tabla 'Test' con los nuevos valores
     await db.runAsync(
-      `UPDATE Test SET intentos = ? WHERE id = ?`,
+      `UPDATE Test SET intentos = ?, fails = ? WHERE id = ?`, 
       [
         JSON.stringify(newIntentos),
+        JSON.stringify(newFails),
         id
       ]
     );
+
+    // Obtener todos los tests
     await getAllTests(db);
   } catch (e) {
     Alert.alert("Error al actualizar el test:", e.message);
@@ -145,10 +158,10 @@ const updateTrys = async (db, id, updatedData) => {
 };
 
 
+
   const deleteTest = async (db, id) => {
     try {
       console.log("Generando ID:", id.toString());
-      // Verifica si el ID existe en la base de datos antes de intentar eliminarlo
       const checkId = await db.getFirstAsync(
         `SELECT id FROM Test WHERE id = ?`,
         [id]

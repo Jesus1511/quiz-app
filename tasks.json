@@ -1,13 +1,12 @@
 {
     "tasks": [
-        "mostrar los resultados en stats",
-
-        "modo de examen enfocado en base a preguntas falladas y en que cantidad (papa dio protejeme con tu espiritu)",
-        "cuando queda poco tiempo se escuchan tictacs"
+        "añadir preguntas por CSV y Ecxel"
     ],
     "done": [
         "tiempo each quest",
         "cambio de color de la bar",
-        "guardar los intentos y mostrarlos en la interfaz final"
+        "guardar los intentos y mostrarlos en la interfaz final",
+        "mostrar los resultados en stats",
+        "modo de examen enfocado en base a preguntas falladas y en que cantidad (papa dio protejeme con tu espiritu)"
     ]
 }

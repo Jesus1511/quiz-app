@@ -1,8 +1,10 @@
 import { StyleSheet, Text, View, useColorScheme } from 'react-native'
-import React from 'react'
+import React, { useContext } from 'react'
 import useColors from '../../utils/Colors'
 import { useState, useEffect } from 'react'
 import { exams } from '../../utils/Consts'
+import { AppContext } from '../../localStorage/LocalStorage'
+import { getBestTrys } from '../../utils/bestTry'
 
 const Exams = () => {
 
@@ -11,17 +13,17 @@ const Exams = () => {
     const isDark = useColorScheme() == "dark"
     const Colors = useColors(isDark)
 
+    const { tests } = useContext(AppContext)
+
     useEffect(() => {
         let newExams = [];
-        exams.forEach((exam) => {
+        tests.forEach((exam) => {
           if ( exam.intentos.length >= 1) {
             newExams.push(exam);
           }
         });
         setDoneExams(newExams);
-      }, [exams]);
-      
-      
+      }, [tests]);
     
 
     const styles = DynamicStyles(Colors)
@@ -39,8 +41,8 @@ const Exams = () => {
 
                 <Text style={styles.examProps}>Categoria: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{exam.categoria}</Text></Text>
                 <Text style={styles.examProps}>Preguntas: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{exam.preguntas.length}</Text></Text>
-                <Text style={styles.examProps}>Mejor Tiempo: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{exam.intentos[0].bestTime} sg</Text></Text>
-                <Text style={styles.examProps}>Mejor Nota: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{exam.intentos[0].nota}/{exam.preguntas.length}</Text></Text>
+                <Text style={styles.examProps}>Mejor Tiempo: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{getBestTrys(exam.intentos).bestTime} sg</Text></Text>
+                <Text style={styles.examProps}>Mejor Nota: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{Math.ceil((getBestTrys(exam.intentos).bestScore * exam.preguntas.length) / 100)}/{exam.preguntas.length}</Text></Text>
             </View>
         ) )}
       </View>

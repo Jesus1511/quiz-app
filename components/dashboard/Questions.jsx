@@ -17,7 +17,7 @@ const Questions = ({ route }) => {
   const [responseColor, setResponseColor] = useState({ question: null, isTrue: false });
   const [QuestIndex, setQuestIndex] = useState(null);
 
-  const { setIntento } = useContext(AppContext)
+  const { setIntento, setFailedQuests } = useContext(AppContext)
 
   const isDark = useColorScheme() == 'dark';
   const Colors = useColors(isDark);
@@ -66,6 +66,17 @@ const Questions = ({ route }) => {
         return [...intento, {isCorrect: false, time:test.tiempo}]
       })
 
+      setFailedQuests(prev => {
+        const updatedFails = test.fails.map((fail) => {
+          if (fail.index === question.index) {
+            return { ...fail, count: fail.count + 1 }; 
+          }
+          return fail;
+        });
+      
+        return [...prev, ...updatedFails, { ...question, count: 1 }];
+      });
+
       if (Index < preguntas.length) {
         navigation.navigate('AnswerQuestions', { Index: Index + 1, test, mode, orden });
       } else {
@@ -78,7 +89,7 @@ const Questions = ({ route }) => {
   useEffect(() => {
     if (mode === "random" && orden && orden[Index - 1] !== undefined) {
       setQuestIndex(orden[Index - 1]);
-    } else if (!orden) {
+    } else {
       setQuestIndex(Index);
     }
 
@@ -116,6 +127,20 @@ const Questions = ({ route }) => {
       setIntento((intento) => {
         return [...intento, {isCorrect: newResponse.isTrue, time:currentTime}]
       })
+
+      if (!response) {
+        setFailedQuests(prev => {
+          const updatedFails = test.fails.map((fail) => {
+            if (fail.index === question.index) {
+              return { ...fail, count: fail.count + 1 }; 
+            }
+            return fail;
+          });
+        
+          return [...prev, ...updatedFails, { ...question, count: 1 }];
+        });
+        
+      }
   
       setTimeout(() => {
         Animated.timing(opacity, {

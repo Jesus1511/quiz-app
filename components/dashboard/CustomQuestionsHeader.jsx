@@ -14,7 +14,7 @@ const CustomQuestionsHeader = ({ route }) => {
 
   const navigation = useNavigation();
 
-  const {setIntento} = useContext(AppContext)
+  const {setIntento, setFailedQuests} = useContext(AppContext)
   const {test} = route.params
 
   return (
@@ -34,6 +34,7 @@ const CustomQuestionsHeader = ({ route }) => {
                 onPress: () => {
                   navigation.goBack()
                   setIntento([])
+                  setFailedQuests([])
                 },
                 style: 'destructive', 
               },

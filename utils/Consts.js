@@ -55,9 +55,9 @@ export const preguntas = [
 
 
 export const exams = [
-    {name:"Examen super importante",   categoria: "Matematicas", preguntas, intentos: [{nota: 20, bestTime:78, date: "Date.now()",},{nota: 19, bestTime:79, date: "Un fecha"}], tiempo: 90},
+    {name:"Examen super importante",   categoria: "Matematicas", preguntas, intentos: [{nota: 20, bestTime:78, date: "Date.now()",},{nota: 19, bestTime:79, date: "Un fecha"}], tiempo: 6},
 
-    {name:"Examen super importante 2", categoria:"Castellano", preguntas, intentos: [], tiempo: 40},
+    {name:"Examen super importante 2", categoria:"Castellano", preguntas, intentos: [], tiempo: 6, fails:[]},
 
     {name:"Examen super importante 3", categoria:"Leyes", preguntas, intentos: [{nota: 25, bestTime:34, date: "Un fecha"}], tiempo: 40}
 
