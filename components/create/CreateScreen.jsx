@@ -7,6 +7,8 @@ import useColors from '../../utils/Colors';
 import { useSQLiteContext } from 'expo-sqlite';
 
 import { AppContext } from '../../localStorage/LocalStorage';
+import { AntDesign } from '@expo/vector-icons';
+import ImportsModel from './ImportsModel';
 
 const { width, height } = Dimensions.get('window');
 
@@ -227,19 +229,31 @@ const MenuQuestions = ({setIsMenuOpen, questions}) => {
   const isDark = useColorScheme() === "dark"
   const Colors = useColors(isDark)
 
+  const {handleDowload, handleImportCSV, handleImportEcxel} = ImportsModel()
+
   return (
       <>
 
       <View style={[styles.questionsMenu, {backgroundColor: Colors.green}]}>
-          <TouchableOpacity style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}  onPress={() => {navigation.navigate('Questions', {QuestIndex: 0, isEditing:false}); setIsMenuOpen(false)}}>
+          <TouchableOpacity style={[styles.menuButtons, {backgroundColor:Colors.darkGreen, width: "80%"}]}  onPress={() => {navigation.navigate('Questions', {QuestIndex: 0, isEditing:false}); setIsMenuOpen(false)}}>
               <Text style={[styles.menuTexts, {color: Colors.text,}]}>{questions.length > 1?"Editar Preguntas":"Rellenar Manualmente"}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
-              <Text style={[styles.menuTexts, {color: Colors.text,}]}>Descargar Plantilla CSV</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
-              <Text style={[styles.menuTexts, {color: Colors.text,}]}>Descargar Plantilla Ecxel</Text>
-          </TouchableOpacity>
+          <View style={{width:"80%", flexDirection:"row", justifyContent:"space-between"}}>
+            <TouchableOpacity onPress={() => handleImportCSV()} style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
+                <Text style={[styles.menuTexts, {color: Colors.text,}]}>Subir Plantilla CSV</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDowload("CSV")} style={[styles.miniMenuButtons, {backgroundColor:Colors.darkGreen,}]}>
+              <AntDesign name="download" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
+          <View style={{width:"80%", flexDirection:"row", justifyContent:"space-between"}}>
+            <TouchableOpacity onPress={() => handleImportEcxel()} style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
+                <Text style={[styles.menuTexts, {color: Colors.text,}]}>Subir Plantilla Ecxel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDowload("ECXEL")} style={[styles.miniMenuButtons, {backgroundColor:Colors.darkGreen,}]}>
+              <AntDesign name="download" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
       </View>
       </>
       
@@ -324,10 +338,17 @@ const styles = StyleSheet.create({
   },
   menuButtons:{
     height:75,
-    width:"80%",
+    width:230,
     justifyContent:"center",
     alignItems:"center",
-    borderRadius:20,
+    borderRadius:10,
+  },
+  miniMenuButtons: {
+    height:75,
+    width:52,
+    justifyContent:"center",
+    alignItems:"center",
+    borderRadius:10,
   },
   menuTexts: {
     fontFamily:"Montserrat-SemiBold",

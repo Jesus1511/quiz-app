@@ -21,9 +21,9 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-      "READ_EXTERNAL_STORAGE",
-      "WRITE_EXTERNAL_STORAGE"
-    ],
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "package": "com.jisuselpapi.quizapp"
     },
     "web": {
@@ -33,9 +33,9 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-asset"
     ],
-    
     "experiments": {
       "typedRoutes": true
     },

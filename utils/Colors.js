@@ -14,7 +14,7 @@ function useColors () {
 
     const green2 = isDark ? "#76b524ff" : "#b0e655"
 
-    const darkGreen = isDark?"#6cb113":"#99d532"
+    const darkGreen = isDark?"#6cb113":"#90c92c"
 
     const transparentGreen = isDark ? "#2e2e29ff" : "#fffff2ff"
 
