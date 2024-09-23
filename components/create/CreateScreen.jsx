@@ -229,7 +229,7 @@ const MenuQuestions = ({setIsMenuOpen, questions}) => {
   const isDark = useColorScheme() === "dark"
   const Colors = useColors(isDark)
 
-  const {handleDowload, handleImportCSV, handleImportEcxel} = ImportsModel()
+  const {handleDownload, handleImportCSV, handleImportEcxel} = ImportsModel()
 
   return (
       <>
@@ -242,7 +242,7 @@ const MenuQuestions = ({setIsMenuOpen, questions}) => {
             <TouchableOpacity onPress={() => handleImportCSV()} style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
                 <Text style={[styles.menuTexts, {color: Colors.text,}]}>Subir Plantilla CSV</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDowload("CSV")} style={[styles.miniMenuButtons, {backgroundColor:Colors.darkGreen,}]}>
+            <TouchableOpacity onPress={() => handleDownload("CSV")} style={[styles.miniMenuButtons, {backgroundColor:Colors.darkGreen,}]}>
               <AntDesign name="download" size={24} color="black" />
             </TouchableOpacity>
           </View>
@@ -250,7 +250,7 @@ const MenuQuestions = ({setIsMenuOpen, questions}) => {
             <TouchableOpacity onPress={() => handleImportEcxel()} style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
                 <Text style={[styles.menuTexts, {color: Colors.text,}]}>Subir Plantilla Ecxel</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDowload("ECXEL")} style={[styles.miniMenuButtons, {backgroundColor:Colors.darkGreen,}]}>
+            <TouchableOpacity onPress={() => handleDownload("ECXEL")} style={[styles.miniMenuButtons, {backgroundColor:Colors.darkGreen,}]}>
               <AntDesign name="download" size={24} color="black" />
             </TouchableOpacity>
           </View>

@@ -1,96 +1,109 @@
-import React, { useEffect } from 'react';
-import { Asset } from 'expo-asset';
+import { useEffect, useState } from 'react';
 import * as FileSystem from 'expo-file-system';
 import Papa from 'papaparse';
-import CSVFile from '../../assets/CSV_plantilla.csv'
+import CSVTemplate from '../../CSVTemplate';
+import { shareAsync } from 'expo-sharing';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+import { ToastAndroid, Alert, Platform } from 'react-native';
 
 const ImportsModel = () => {
-  const fileUriCSVTemplate = FileSystem.documentDirectory + 'CSV_plantilla.csv';
+  const [data, setData] = useState()
+  const csvString = CSVTemplate().trim();
 
-  useEffect(() => {
-    const copyCSVTemplate = async () => {
-      try {
-        // Verifica si el archivo ya existe
-        const fileInfo = await FileSystem.getInfoAsync(fileUriCSVTemplate);
+useEffect(() => {
+  const readCsvString = () => {
+    
+    Papa.parse(csvString, {
+      header: true,
+      dynamicTyping: true,
+      complete: (results) => {
+        const formattedData = results.data.map((item) => {
+          const opciones = results.data
+            .map((opt, index) => {
+              if (index > 1 && index < 7) {
+                return {
+                  opcion: opt.opcion,
+                  verdadera: opt.verdadera,
+                };
+              }
+            })
+            .filter(Boolean); 
+
+          return {
+            index: item.index,
+            pregunta: item.pregunta,
+            opciones,
+          };
+        });
         
-        if (!fileInfo.exists) {
-          const csvTemplateAsset = Asset.fromModule(CSVFile).uri;
-          await FileSystem.copyAsync({
-            from: csvTemplateAsset,
-            to: fileUriCSVTemplate,
-          });
-          console.log('CSV copiado a:', fileUriCSVTemplate);
-        }
-      } catch (error) {
-        console.error('Error al copiar el CSV:', error);
-      }
-    };
-
-    copyCSVTemplate();
-  }, []);
-
-  const processCSV = (csvData) => {
-    const preguntas = csvData.map((row) => {
-      const opciones = [];
-
-      for (let i = 2; i <= 6; i++) {
-        const opcionKey = `opcion_${i - 1}`;
-        const verdaderaKey = `verdadera_${i - 1}`;
-
-        if (row[opcionKey]) {
-          opciones.push({
-            isTrue: row[verdaderaKey] === 'true',
-            opcion: row[opcionKey],
-          });
-        }
-      }
-
-      if (opciones.length >= 2 && opciones.length <= 5) {
-        return {
-          index: parseInt(row.index),
-          pregunta: row.pregunta,
-          opciones,
-        };
-      } else {
-        console.error(`La pregunta con índice ${row.index} no tiene entre 2 y 5 opciones válidas.`);
-        return null;
-      }
+        setData(formattedData);
+      },
     });
-
-    return preguntas.filter((pregunta) => pregunta !== null);
   };
 
-  async function handleUploadCSV(fileUri) {
-    try {
-      const fileContent = await FileSystem.readAsStringAsync(fileUri);
-      console.log("Contenido del archivo:", fileContent);
+  readCsvString();
+}, []);
 
-      Papa.parse(fileContent, {
-        header: true,
-        complete: (result) => {
-          console.log(result.data);
-          const preguntas = processCSV(result.data);
-          console.log("preguntas", preguntas);
-        },
-      });
-    } catch (error) {
-      console.error("Error al leer el archivo:", error);
-    }
-  }
+
 
   function handleImportCSV() {
-    handleUploadCSV(fileUriCSVTemplate);
+    console.log(data)
   }
-    function handleImportEcxel () {
-        alert("wtf")
-    }
-    
-    function handleDowload (format) {
-        alert(format)
+
+  function handleImportEcxel () {
+      alert("wtf")
+  }
+
+
+  const handleDownload = async (s) => {
+    let filename = "plantilla.csv";
+    if (s == "ECXEL") {
+      filename = "plantilla.xlsx";
     }
 
+    const storage = getStorage();
+    const storageRef = ref(storage, 'gs://quiz-app-5d414.appspot.com/template.csv');
+
+    const downloadURL = await getDownloadURL(storageRef);
+
+    const result = await FileSystem.downloadAsync(
+      downloadURL,
+      FileSystem.documentDirectory + filename,
+      {
+        headers: {
+          "MyHeader": "MyValue"
+        }
+      }
+    );
+
+    const contentType = result.headers["content-type"] || "text/csv";
+    console.log(contentType)
+    save(result.uri, filename, contentType);
+  };
+
+
+  const save = async (uri, filename, mimetype) => {
+    if (Platform.OS === "android") {
+      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (permissions.granted) {
+        const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, filename, mimetype)
+          .then(async (uri) => {
+            await FileSystem.writeAsStringAsync(uri, base64, { encoding: FileSystem.EncodingType.Base64 });
+          })
+          .catch(e => console.log(e));
+        ToastAndroid.show("Se ah descargado correctamente la plantilla en el dispositivo", ToastAndroid.SHORT);
+      } else {
+        shareAsync(uri);
+      }
+    } else {
+      shareAsync(uri);
+    }
+  };
+
+
   return {
-    handleDowload,
+    handleDownload,
     handleImportCSV,
     handleImportEcxel
   }
