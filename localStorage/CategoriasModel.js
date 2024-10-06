@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ToastAndroid } from 'react-native'; // Asegúrate de importar esto si estás usando ToastAndroid y Alert
 
 const CategoriasModel = () => {
   const [categorias, setCategorias] = useState([]);
@@ -9,19 +8,27 @@ const CategoriasModel = () => {
   useEffect(() => {
     async function crearCategoria() {
       try {
-        const storedCategorias = await AsyncStorage.getItem('categorias');
+        //const storedCategorias = await AsyncStorage.getItem('categorias');
         
-        if (!storedCategorias) {
+        //if (!storedCategorias) {
           const newCategorias = [{value:"Matematicas", thereshold:0}, {value:"Leyes", thereshold:0}, {value:"Computación", thereshold:0}, {value:"Biologia", thereshold:0}, {value:"Castellano", thereshold:0}];
           await AsyncStorage.setItem('categorias', JSON.stringify(newCategorias));
+
           setCategorias(newCategorias);
-        } else {
-          setCategorias(JSON.parse(storedCategorias));
-        }
+
+
+        //} else {
+        //  setCategorias(JSON.parse(storedCategorias));
+        //}
         
       } catch (error) {
         console.log(error);
-        ToastAndroid.show('Hubo un problema al cargar las categorías', ToastAndroid.LONG);
+        Toast.show({
+          type: 'info', 
+          text1: "Hubo un problema al cargar las categorías",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
       }
     }
     crearCategoria();
@@ -35,7 +42,13 @@ const CategoriasModel = () => {
       await AsyncStorage.setItem('categorias', JSON.stringify(newCategorias));
     } catch (error) {
       console.log(error);
-      ToastAndroid.show('No se pudo añadir la categoría', ToastAndroid.LONG);
+      
+      Toast.show({
+        type: 'info', 
+        text1: "No se pudo añadir la categoría",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
     }
   }
 
@@ -51,13 +64,28 @@ const CategoriasModel = () => {
         setCategorias(newCategorias);
         await AsyncStorage.setItem('categorias', JSON.stringify(newCategorias));
         
-        ToastAndroid.show('Categoría eliminada con éxito', ToastAndroid.LONG);
+        Toast.show({
+          type: 'info', 
+          text1: "Categoría eliminada con éxito",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
       } else {
-        ToastAndroid.show('No se encontraron categorías para eliminar', ToastAndroid.LONG);
+        Toast.show({
+          type: 'info', 
+          text1: "No se encontraron categorías para eliminar",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
       }
     } catch (error) {
       console.log(error);
-      ToastAndroid.show('Hubo un problema al eliminar la categoría', ToastAndroid.LONG);
+      Toast.show({
+        type: 'info', 
+        text1: "Hubo un problema al eliminar la categoría",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
     }
   }
   

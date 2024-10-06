@@ -18,9 +18,10 @@ const Theresholds = () => {
         const newCategorias = categorias.map((category) => {
             const relevantTests = tests.filter(test => category.value === test.categoria);
             const bestScore = relevantTests.length > 0 ? getBestTrys(relevantTests.flatMap(test => test.intentos)).bestScore : 0;
+            
             return { ...category, thereshold: bestScore };
         });
-        console.log(newCategorias)
+
         setCategories(newCategorias);
     }, [categorias, tests]); 
 
@@ -36,10 +37,10 @@ const Theresholds = () => {
                     <Text style={styles.categoriaName}>{categoria.value}</Text>
 
                     <View style={styles.bar}>
-                        <View style={[styles.barContent, {width: 2*categoria.thereshold}]}/>
+                        <View style={[styles.barContent, {width: 2*categoria?.thereshold}]}/>
                     </View>
 
-                    <Text style={{color:Colors.text, marginLeft:5, width:35}}>{categoria.thereshold}%</Text>
+                    <Text style={{color:Colors.text, marginLeft:5, width:35}}>{Math.round(categoria.thereshold)}%</Text>
                 </View>
             ))}
         </View>

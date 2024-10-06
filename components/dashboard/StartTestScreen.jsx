@@ -1,10 +1,12 @@
-import { StyleSheet, Text, View, useColorScheme, TouchableOpacity, ScrollView, Animated, Dimensions, ToastAndroid} from 'react-native'
-import React, {useEffect, useRef, useState} from 'react'
+import { StyleSheet, Text, View, useColorScheme, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native'
+import React, { useEffect, useRef, useState, useContext } from 'react'
+import { AppContext } from '../../localStorage/LocalStorage'
 import useColors from '../../utils/Colors'
 import { globalStyles } from '../../Styles/GlobalStyles'
 import { useNavigation } from '@react-navigation/native'
 import { formatDate } from '../../utils/bestTry'
 import { preguntas } from '../../utils/Consts'
+import Toast from 'react-native-toast-message';
 
 const {width, height} = Dimensions.get('window')
 
@@ -65,7 +67,7 @@ const StartTestScreen = ({route}) => {
                <Text style={styles.examProps}>Preguntas: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{test.preguntas.length}</Text></Text>
                <Text style={styles.examProps}>Duración: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{Math.floor((test.tiempo*test.preguntas.length)/60)} min</Text></Text>
 
-               <Text style={styles.examProps}>Fails: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{JSON.stringify(test.fails[0]?.count)}</Text></Text>
+               {/* <Text style={styles.examProps}>Fails: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{JSON.stringify(test.fails[0]?.count)}</Text></Text> */}
          </View>
 
           {test.intentos.length >= 1 && (
@@ -124,6 +126,8 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
   const Colors = useColors(isDark);
 
   const [open, setOpen] = useState(false);
+
+  const { setFailedQuests } = useContext(AppContext)
   
   // Animación para la altura
   const heightAnim = useRef(new Animated.Value(0)).current;
@@ -164,6 +168,7 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
           <TouchableOpacity
             onPress={() => {
               setIsMenuOpen(false);
+              setFailedQuests(test.fails)
               navigation.navigate('AnswerQuestions', { Index: 1, test, mode: "random", orden: generateRandomArray(test.preguntas.length) });
             }}
             style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
@@ -174,6 +179,7 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
           <TouchableOpacity
             onPress={() => {
               setIsMenuOpen(false);
+              setFailedQuests(test.fails)
               navigation.navigate('AnswerQuestions', { Index: 1, test, mode: "complete", orden: null });
             }}
             style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
@@ -184,13 +190,22 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
           <TouchableOpacity
             onPress={() => {
               if (test.intentos.length >= 1 && test.fails.length >= 1) {
-                //setIsMenuOpen(false)
-                //navigation.navigate('AnswerQuestions', { Index: 1, test: {...test, preguntas:test.fails}, mode:"focus", orden:null });
+
                 setOpen(!open);
               } else if (test.intentos.length > 1 && test.fails.length < 1) {
-                ToastAndroid.show("No haz cometido ningun error anteriormente en este examen, felicidades", ToastAndroid.LONG);
+                Toast.show({
+                  type: 'info', 
+                  text1: "No haz cometido ningun error anteriormente en este examen, felicidades",
+                  position: 'bottom',
+                  visibilityTime: 1000, 
+                });
               }  else {
-                ToastAndroid.show("Debes realizar el test al menos una vez para hacerlo en modo enfocado", ToastAndroid.LONG);
+                Toast.show({
+                  type: 'info', 
+                  text1: "Debes realizar el test al menos una vez para hacerlo en modo enfocado",
+                  position: 'bottom',
+                  visibilityTime: 1000, 
+                });
               }
             }}
             style={[styles.menuButtons, { backgroundColor: Colors.darkGreen }]}
@@ -206,9 +221,15 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
               onPress={() => {
                 const filteredFails = test.fails.filter(item => item.count > 0 && item.count < 4);
                 if (filteredFails.length < 1) {
-                  ToastAndroid.show("no haz fallado ninguna pregunta entre 1 y 3 veces", ToastAndroid.SHORT)
+                  Toast.show({
+                    type: 'info', 
+                    text1: "no haz fallado ninguna pregunta entre 1 y 3 veces",
+                    position: 'bottom',
+                    visibilityTime: 1000, 
+                  });
                   return
                 }
+                setFailedQuests(test.fails)
                 navigation.navigate('AnswerQuestions', { Index: 1, test: { ...test, preguntas: filteredFails }, mode: "focus", orden: null });
                 setIsMenuOpen(false);
                 setOpen(!open);
@@ -222,9 +243,15 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
               onPress={() => {
                 const filteredFails = test.fails.filter(item => item.count >= 3 && item.count < 6);
                 if (filteredFails.length < 1) {
-                  ToastAndroid.show("No haz fallado ninguna pregunta entre 3 y 5 veces", ToastAndroid.SHORT)
+                  Toast.show({
+                    type: 'info', 
+                    text1: "No haz fallado ninguna pregunta entre 3 y 5 veces",
+                    position: 'bottom',
+                    visibilityTime: 1000, 
+                  });
                   return
                 }
+                setFailedQuests(test.fails)
                 navigation.navigate('AnswerQuestions', { Index: 1, test: { ...test, preguntas: filteredFails }, mode: "focus", orden: null });
                 setIsMenuOpen(false);
                 setOpen(!open);
@@ -238,9 +265,15 @@ const MenuQuestions = ({ test, setIsMenuOpen }) => {
               onPress={() => {
                 const filteredFails = test.fails.filter(item => item.count >= 5);
                 if (filteredFails.length < 1) {
-                  ToastAndroid.show("No haz fallado ninguna pregunta +5 veces", ToastAndroid.SHORT)
+                  Toast.show({
+                    type: 'info', 
+                    text1: 'No has fallado ninguna pregunta más de 5 veces.',
+                    position: 'bottom',
+                    visibilityTime: 1000, 
+                  });
                   return
                 }
+                setFailedQuests(test.fails)
                 navigation.navigate('AnswerQuestions', { Index: 1, test: { ...test, preguntas: filteredFails }, mode: "focus", orden: null });
                 setIsMenuOpen(false);
                 setOpen(!open);

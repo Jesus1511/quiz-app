@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import loadFonts from '../utils/font'
 import { initializeApp } from "firebase/app";
-
+import Toast from 'react-native-toast-message';
 
 const index = () => {
 
@@ -37,7 +37,10 @@ const index = () => {
      </View>
    )} else {
      return (
+      <>
          <App />
+         <Toast />
+      </>
        )
      }
    }

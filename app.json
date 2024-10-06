@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "quiz-app",
-    "slug": "quiz-app",
+    "name": "TestBuilder",
+    "slug": "testbuilder-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "testbuilder",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -24,7 +24,7 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ],
-      "package": "com.jisuselpapi.quizapp"
+      "package": "com.jisuselpapi.testbuilder"
     },
     "web": {
       "bundler": "metro",
@@ -34,7 +34,13 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -48,7 +54,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "65b53319-36c6-436c-8918-ea8c4d0572fe"
+        "projectId": "89ccd5d0-b7f4-4cfb-a5c7-1d02d393d797"
       }
     }
   }

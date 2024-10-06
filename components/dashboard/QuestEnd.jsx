@@ -20,6 +20,8 @@ const QuestEnd = ({route}) => {
 
     const { intento, setIntento, updateTrys, failedQuests, setFailedQuests } = useContext(AppContext)
 
+    console.log(intento)
+
     const [score, setScore] = useState(0)
     const [scoreImprove, setScoreImprove] = useState(0)
     const [time, setTime] = useState(0)
@@ -42,14 +44,22 @@ const QuestEnd = ({route}) => {
 
         if (test.intentos.length >= 1) {
             const {bestTime, bestScore} = getBestTrys(test.intentos)
+            console.log("sss")
+            console.log("sss")
+            console.log("sss")
+            console.log(calcularPorcentajeDiferencia(0,1))
             setScoreImprove(calcularPorcentajeDiferencia(((bestScore * intento.length) / 100), totalScore))
             setTimeInprove(calcularPorcentajeDiferencia(totalTime, bestTime))
         }
     },[intento])
 
     function calcularPorcentajeDiferencia(oldValue, newValue) {
+        let oldValues = oldValue
+        if (oldValue <= 0) {
+            oldValues = 1
+        }
         const difference = newValue - oldValue;
-        const percentageDifference = (difference / oldValue) * 100;
+        const percentageDifference = (difference / oldValues) * 100;
         return percentageDifference;
     
     }
@@ -108,7 +118,10 @@ return (
                     <Text style={styles.statTitle}>Mejora Respecto a tu mejor nota</Text>
                     <View style={styles.progressBarContainer}>
                         <View style={styles.bar}>
-                            <View style={[styles.barContent, { width: scoreImprove < 0? 0 : scoreImprove*2.6 }]} />
+                            {console.log(scoreImprove)}
+                            <View style={[styles.barContent, { 
+                                width: Math.max(scoreImprove, 0) < 0 ? 0 : Math.min(scoreImprove * 2.6, 100) 
+                            }]} />
                         </View>
                         <Text style={styles.statValue}>{scoreImprove?.toFixed(0)}%</Text>
                     </View>
@@ -126,7 +139,9 @@ return (
                     <Text style={styles.statTitle}>Mejora respecto a tu mejor tiempo</Text>
                     <View style={styles.progressBarContainer}>
                         <View style={styles.bar}>
-                            <View style={[styles.barContent, { width: (time > 0 && timeInprove / time >= 0) ? (timeInprove / time) * 2.6 : 0 }]} />
+                            <View style={[styles.barContent, { 
+                                width: (time > 0 && timeInprove / time >= 0) ? Math.min((timeInprove / time) * 2.6, 100) : 0 
+                            }]} />
                         </View>
                         <Text style={styles.statValue}>{timeInprove?.toFixed(0)}%</Text>
                     </View>

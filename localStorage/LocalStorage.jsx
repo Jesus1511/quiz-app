@@ -13,9 +13,10 @@ const LocalStorage = ({ children }) => {
   const [failedQuests, setFailedQuests] = useState([]);
 
   const { categorias, addCategory, deleteCategory } = CategoriasModel();
+
   const { createTest, updateTest, getAllTests, deleteTest, deleteAllTests, updateTrys, tests } = TestFunctions();
 
-  const db = useSQLiteContext(); // Obtén la instancia de la base de datos
+  const db = useSQLiteContext();
 
   useEffect(() => {
     async function fetchData() {
@@ -29,7 +30,7 @@ const LocalStorage = ({ children }) => {
     if (db) {
       fetchData();
     }
-  }, [db]); // Dependencia en `db` para ejecutar cuando el contexto esté disponible
+  }, [db]);
 
   if (!categorias || !tests) {
     return (

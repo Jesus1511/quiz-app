@@ -37,7 +37,7 @@ const App = () => {
                 name="Home"
                 component={DashboardScreen}
                 options={{
-                    header: () => <Header title="App-Name" />,  // Usamos el componente personalizado
+                    header: () => <Header title="TestBuilder" />,  // Usamos el componente personalizado
                     headerTransparent: true,
                   }}
               />

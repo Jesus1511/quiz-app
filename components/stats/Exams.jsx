@@ -2,7 +2,6 @@ import { StyleSheet, Text, View, useColorScheme } from 'react-native'
 import React, { useContext } from 'react'
 import useColors from '../../utils/Colors'
 import { useState, useEffect } from 'react'
-import { exams } from '../../utils/Consts'
 import { AppContext } from '../../localStorage/LocalStorage'
 import { getBestTrys } from '../../utils/bestTry'
 
@@ -41,7 +40,7 @@ const Exams = () => {
 
                 <Text style={styles.examProps}>Categoria: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{exam.categoria}</Text></Text>
                 <Text style={styles.examProps}>Preguntas: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{exam.preguntas.length}</Text></Text>
-                <Text style={styles.examProps}>Mejor Tiempo: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{getBestTrys(exam.intentos).bestTime} sg</Text></Text>
+                <Text style={styles.examProps}>Mejor Tiempo: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{(getBestTrys(exam.intentos).bestTime).toFixed(2)} sg</Text></Text>
                 <Text style={styles.examProps}>Mejor Nota: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{Math.ceil((getBestTrys(exam.intentos).bestScore * exam.preguntas.length) / 100)}/{exam.preguntas.length}</Text></Text>
             </View>
         ) )}

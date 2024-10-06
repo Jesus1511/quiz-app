@@ -1,7 +1,8 @@
 import * as SQLite from 'expo-sqlite';
 import { useState } from 'react';
-import { ToastAndroid, Alert } from 'react-native';
+import { Alert } from 'react-native';
 import * as Crypto from 'expo-crypto';
+import Toast from 'react-native-toast-message';
 
 const TestFunctions = () => {
   const [tests, setTests] = useState();
@@ -92,12 +93,17 @@ const TestFunctions = () => {
       );
   
       if (!checkId) {
-        ToastAndroid.show("Test no encontrado", ToastAndroid.SHORT);
+        Toast.show({
+          type: 'info', 
+          text1: "Test no encontrado",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
         return;
       }
   
       await db.runAsync(
-        `UPDATE Test SET tiempo = ?, name = ?, categoria = ?, preguntas = ?, intentos = ?, fails = ?, WHERE id = ?`,
+        `UPDATE Test SET tiempo = ?, name = ?, categoria = ?, preguntas = ?, intentos = ?, fails = ? WHERE id = ?`,
         [
           updatedData.tiempo,
           updatedData.name,
@@ -109,53 +115,78 @@ const TestFunctions = () => {
         ]
       );
   
-      ToastAndroid.show("Test actualizado", ToastAndroid.LONG);
+      Toast.show({
+        type: 'info', 
+        text1: "Test actualizado",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
       await getAllTests(db);
     } catch (e) {
       Alert.alert("Error al actualizar el test:", e.message);
     }
   };
   
-// Función para actualizar un test
-const updateTrys = async (db, id, updatedData, fails) => {
-  try {
-    console.log("Generando ID:", id.toString());
-
-    // Obtener las columnas 'intentos' y 'fails' de la base de datos
-    const test = await db.getFirstAsync(
-      `SELECT intentos, fails FROM Test WHERE id = ?`,
-      [id]
-    );
-
-    if (!test) {
-      ToastAndroid.show("Test no encontrado", ToastAndroid.SHORT);
-      return;
+  const updateTrys = async (db, id, updatedData, fails) => {
+    try {
+      console.log("Generando ID:", id.toString());
+  
+      // Obtener las columnas 'intentos' y 'fails' de la base de datos
+      const test = await db.getFirstAsync(
+        `SELECT intentos, fails FROM Test WHERE id = ?`,
+        [id]
+      );
+  
+      if (!test) {
+        Toast.show({
+          type: 'info', 
+          text1: "Test no encontrado",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
+        return;
+      }
+  
+      // Parsear los datos de 'intentos' y 'fails'
+      const oldIntentos = JSON.parse(test.intentos || "[]");
+      const oldFails = JSON.parse(test.fails || "[]");
+  
+      // Agregar el nuevo intento y mantener solo los últimos 3
+      const newIntentos = [...oldIntentos, updatedData].slice(-3);
+  
+      // Actualizar los fallos: Reemplazar si ya existe, añadir si no
+      const updatedFails = oldFails.map(fail => {
+        // Verificar si el `index` del fail ya existe en `fails`
+        const matchingFail = fails.find(f => f.index === fail.index);
+        
+        // Si existe un fail con el mismo `index`, reemplazarlo
+        return matchingFail ? matchingFail : fail;
+      });
+  
+      // Añadir los nuevos fallos que no estaban previamente
+      fails.forEach(fail => {
+        if (!updatedFails.some(f => f.index === fail.index)) {
+          updatedFails.push(fail);
+        }
+      });
+  
+      // Actualizar la tabla 'Test' con los nuevos valores
+      await db.runAsync(
+        `UPDATE Test SET intentos = ?, fails = ? WHERE id = ?`, 
+        [
+          JSON.stringify(newIntentos),
+          JSON.stringify(updatedFails),
+          id
+        ]
+      );
+  
+      // Obtener todos los tests
+      await getAllTests(db);
+    } catch (e) {
+      Alert.alert("Error al actualizar el test:", e.message);
     }
-
-    // Parsear los datos de 'intentos' y 'fails'
-    const oldIntentos = JSON.parse(test.intentos || "[]");
-    const oldFails = JSON.parse(test.fails || "[]");
-
-    // Agregar los nuevos intentos y fallos
-    const newIntentos = [...oldIntentos, updatedData];
-    const newFails = [...oldFails, ...fails];
-
-    // Actualizar la tabla 'Test' con los nuevos valores
-    await db.runAsync(
-      `UPDATE Test SET intentos = ?, fails = ? WHERE id = ?`, 
-      [
-        JSON.stringify(newIntentos),
-        JSON.stringify(newFails),
-        id
-      ]
-    );
-
-    // Obtener todos los tests
-    await getAllTests(db);
-  } catch (e) {
-    Alert.alert("Error al actualizar el test:", e.message);
-  }
-};
+  };
+  
 
 
 
@@ -168,7 +199,12 @@ const updateTrys = async (db, id, updatedData, fails) => {
       );
   
       if (!checkId) {
-        ToastAndroid.show("Test no encontrado", ToastAndroid.SHORT);
+        Toast.show({
+          type: 'info', 
+          text1: "Test no encontrado",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
         return;
       }
   
@@ -177,7 +213,12 @@ const updateTrys = async (db, id, updatedData, fails) => {
         [id]
       );
   
-      ToastAndroid.show("Test eliminado", ToastAndroid.LONG);
+      Toast.show({
+        type: 'info', 
+        text1: "Test eliminado",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
       await getAllTests(db);
     } catch (e) {
       Alert.alert("Error al eliminar el test:", e.message);

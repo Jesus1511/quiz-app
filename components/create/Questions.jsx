@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Dimensions, TextInput, useColorScheme, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TextInput, useColorScheme, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import React, { useEffect } from 'react';
 import { useState, useContext } from 'react';
 import { AppContext } from '../../localStorage/LocalStorage';
@@ -12,6 +12,7 @@ import { Trash } from '../../assets/images/Trash'
 
 import useColors from '../../utils/Colors';
 import { alphabet, preguntas } from '../../utils/Consts';
+import Toast from 'react-native-toast-message';
 
 const {width, height} = Dimensions.get('window')
 
@@ -95,7 +96,12 @@ const Questions = ({route}) => {
     
     function handleSave () {
         if (questions.length < 5) {
-            ToastAndroid.show('Crea un minimo de 5 preguntas', ToastAndroid.LONG)
+            Toast.show({
+                type: 'info', 
+                text1: "Crea un minimo de 5 preguntas",
+                position: 'bottom',
+                visibilityTime: 1000, 
+              });
             return
         }
         if (!isCompleted()) {
@@ -138,7 +144,12 @@ const Questions = ({route}) => {
 
     function isCompleted() {
         if (name === "") {
-            ToastAndroid.show("Ingrese textualmente la pregunta", ToastAndroid.LONG);
+            Toast.show({
+                type: 'info', 
+                text1: "Ingrese textualmente la pregunta",
+                position: 'bottom',
+                visibilityTime: 1000, 
+              });
             return false;
         }
         
@@ -146,7 +157,12 @@ const Questions = ({route}) => {
         
         if (hasEmptyOption) {
             console.log(hasEmptyOption)
-            ToastAndroid.show("Rellene todas las opciones disponibles", ToastAndroid.LONG);
+            Toast.show({
+                type: 'info', 
+                text1: "Rellene todas las opciones disponibles",
+                position: 'bottom',
+                visibilityTime: 1000, 
+              });
             return false;
         }
     

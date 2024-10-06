@@ -2,8 +2,9 @@ import React, { useContext, useState } from 'react';
 import { View, TextInput, Button, Alert, FlatList, Text } from 'react-native';
 import { AppContext } from '../../localStorage/LocalStorage'; // Importar el contexto
 import useColors from '../../utils/Colors';
-import { useColorScheme, StyleSheet, TouchableOpacity, ToastAndroid } from 'react-native';
+import { useColorScheme, StyleSheet, TouchableOpacity } from 'react-native';
 import { Trash } from '../../assets/images/Trash';
+import Toast from 'react-native-toast-message';
 
 const AddCategoryScreen = () => {
   const { categorias, addCategory, deleteCategory } = useContext(AppContext); // Obtener las categorías y la función del contexto
@@ -17,7 +18,12 @@ const AddCategoryScreen = () => {
       addCategory({value:newCategory, thereshold: 0});
       setNewCategory(''); // Limpiar el input después de agregar
     } else {
-      ToastAndroid.show('El nombre de la categoría no puede estar vacío', ToastAndroid.LONG);
+      Toast.show({
+        type: 'info', 
+        text1: "El nombre de la categoría no puede estar vacío",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
     }
   };
 

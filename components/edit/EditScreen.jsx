@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, useColorScheme, Animated, ScrollView, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, useColorScheme, Animated, ScrollView } from 'react-native';
 import React, { useEffect, useContext, useState, useRef } from 'react';
 import NavigationBar from '../NavigationBar';
 import { globalStyles, isDark } from '../../Styles/GlobalStyles';
 import { useNavigation } from '@react-navigation/native';
 import useColors from '../../utils/Colors';
 import { useSQLiteContext } from 'expo-sqlite';
+import Toast from 'react-native-toast-message';
 
 import { AppContext } from '../../localStorage/LocalStorage';
 
@@ -91,16 +92,36 @@ const CreateScreen = ({route}) => {
 
   function handleSaveExam() {
     if (name == "") {
-      ToastAndroid.show("Seleccione un nombre para el examen", ToastAndroid.LONG)
+      Toast.show({
+        type: 'info', 
+        text1: "Seleccione un nombre para el examen",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
       return
     } else if (selectedCategory == "") {
-      ToastAndroid.show("Seleccione una categoria para el examen", ToastAndroid.LONG)
+      Toast.show({
+          type: 'info', 
+          text1: "Seleccione una categoria para el examen",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
       return 
     } else if (time == "" || time < 5) {
-      ToastAndroid.show("El minimo son 5 segundos por pregunta ", ToastAndroid.LONG)
+      Toast.show({
+          type: 'info', 
+          text1: "El minimo son 5 segundos por pregunta",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
       return
     } else if (questions.length < 1) {
-      ToastAndroid.show("Seleccione las preguntas y respuestas ", ToastAndroid.LONG)
+      Toast.show({
+          type: 'info', 
+          text1: "Seleccione las preguntas y respuestas",
+          position: 'bottom',
+          visibilityTime: 1000, 
+        });
       return
     }
     const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[], fails:[]}

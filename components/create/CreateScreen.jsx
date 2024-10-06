@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, useColorScheme, Animated, ScrollView, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, useColorScheme, Animated, ScrollView } from 'react-native';
 import React, { useEffect, useContext, useState, useRef } from 'react';
 import NavigationBar from '../NavigationBar';
 import { globalStyles, isDark } from '../../Styles/GlobalStyles';
 import { useNavigation } from '@react-navigation/native';
 import useColors from '../../utils/Colors';
 import { useSQLiteContext } from 'expo-sqlite';
+import Toast from 'react-native-toast-message';
 
 import { AppContext } from '../../localStorage/LocalStorage';
 import { AntDesign } from '@expo/vector-icons';
@@ -31,6 +32,7 @@ const CreateScreen = () => {
 
   const slideAnim = useRef(new Animated.Value(0)).current; // Animación de deslizar
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  
   
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -76,25 +78,43 @@ const CreateScreen = () => {
     }
   }, [isMenuOpen, isCategoryMenuOpen])
   
-
-
   const translateY = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-150, 0], // Rango de desplazamiento vertical
+    outputRange: [-150, 0],
   });
 
   function handleSaveExam() {
     if (name == "") {
-      ToastAndroid.show("Seleccione un nombre para el examen", ToastAndroid.LONG)
+      Toast.show({
+        type: 'info', 
+        text1: "Seleccione un nombre para el examen",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
       return
     } else if (selectedCategory == "") {
-      ToastAndroid.show("Seleccione una categoria para el examen", ToastAndroid.LONG)
+      Toast.show({
+        type: 'info', 
+        text1: "Seleccione una categoria para el examen",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
       return 
     } else if (time == "" || time < 5) {
-      ToastAndroid.show("El minimo son 5 segundos por pregunta ", ToastAndroid.LONG)
+      Toast.show({
+        type: 'info', 
+        text1: "El minimo son 5 segundos por pregunta",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
       return
     } else if (questions.length < 1) {
-      ToastAndroid.show("Seleccione las preguntas y respuestas ", ToastAndroid.LONG)
+      Toast.show({
+        type: 'info', 
+        text1: "Seleccione las preguntas y respuestas",
+        position: 'bottom',
+        visibilityTime: 1000, 
+      });
       return
     }
     const newTest = {name, categoria:selectedCategory, tiempo:time, preguntas:questions, intentos:[], fails:[]}
@@ -108,7 +128,6 @@ const CreateScreen = () => {
       style={{ flex: 1, backgroundColor: Colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-
 
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 100, paddingBottom: 30, justifyContent: 'space-between' }}>
         <View>
@@ -229,7 +248,13 @@ const MenuQuestions = ({setIsMenuOpen, questions}) => {
   const isDark = useColorScheme() === "dark"
   const Colors = useColors(isDark)
 
-  const {handleDownload, handleImportCSV, handleImportEcxel} = ImportsModel()
+  const [isDownloadingCSV, setIsDownloadingCSV] = useState(false)
+  const [isDownloadingECXEL, setIsDownloadingECXEL] = useState(false)
+
+  const { setQuestions } = useContext(AppContext); // Categorías de contexto
+
+
+  const {handleDownload, handleImportQuestions} = ImportsModel()
 
   return (
       <>
@@ -238,20 +263,23 @@ const MenuQuestions = ({setIsMenuOpen, questions}) => {
           <TouchableOpacity style={[styles.menuButtons, {backgroundColor:Colors.darkGreen, width: "80%"}]}  onPress={() => {navigation.navigate('Questions', {QuestIndex: 0, isEditing:false}); setIsMenuOpen(false)}}>
               <Text style={[styles.menuTexts, {color: Colors.text,}]}>{questions.length > 1?"Editar Preguntas":"Rellenar Manualmente"}</Text>
           </TouchableOpacity>
+
           <View style={{width:"80%", flexDirection:"row", justifyContent:"space-between"}}>
-            <TouchableOpacity onPress={() => handleImportCSV()} style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
+            <TouchableOpacity onPress={async () => {setQuestions( await handleImportQuestions()); setIsMenuOpen(false)}} style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
                 <Text style={[styles.menuTexts, {color: Colors.text,}]}>Subir Plantilla CSV</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDownload("CSV")} style={[styles.miniMenuButtons, {backgroundColor:Colors.darkGreen,}]}>
-              <AntDesign name="download" size={24} color="black" />
+
+            <TouchableOpacity opacity={isDownloadingCSV?0.5:1} onPress={() => !isDownloadingCSV && handleDownload("CSV", setIsDownloadingCSV)} style={[styles.miniMenuButtons, {backgroundColor: isDownloadingCSV?"#a0a0a090":Colors.darkGreen}]}>
+              <AntDesign name="download" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
           <View style={{width:"80%", flexDirection:"row", justifyContent:"space-between"}}>
-            <TouchableOpacity onPress={() => handleImportEcxel()} style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
+            <TouchableOpacity onPress={async () => {setQuestions( await handleImportQuestions()); setIsMenuOpen(false)}} style={[styles.menuButtons, {backgroundColor:Colors.darkGreen,}]}>
                 <Text style={[styles.menuTexts, {color: Colors.text,}]}>Subir Plantilla Ecxel</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDownload("ECXEL")} style={[styles.miniMenuButtons, {backgroundColor:Colors.darkGreen,}]}>
-              <AntDesign name="download" size={24} color="black" />
+
+            <TouchableOpacity opacity={isDownloadingECXEL?0.5:1} onPress={() => !isDownloadingECXEL && handleDownload("ECXEL", setIsDownloadingECXEL)} style={[styles.miniMenuButtons, {backgroundColor:isDownloadingECXEL?"#a0a0a090":Colors.darkGreen,}]}>
+              <AntDesign name="download" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
       </View>
@@ -279,7 +307,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: 'absolute',
-    top: 60, // Ajustar la posición debajo del input
+    top: 60,
     left: 0,
     right: 0,
     zIndex: 10,

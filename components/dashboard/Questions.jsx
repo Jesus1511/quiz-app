@@ -66,22 +66,8 @@ const Questions = ({ route }) => {
         return [...intento, {isCorrect: false, time:test.tiempo}]
       })
 
-      setFailedQuests(prev => {
-        const updatedFails = test.fails.map((fail) => {
-          if (fail.index === question.index) {
-            return { ...fail, count: fail.count + 1 }; 
-          }
-          return fail;
-        });
-      
-        return [...prev, ...updatedFails, { ...question, count: 1 }];
-      });
-
-      if (Index < preguntas.length) {
-        navigation.navigate('AnswerQuestions', { Index: Index + 1, test, mode, orden });
-      } else {
-        navigation.navigate('QuestEnd', { test });
-      }
+      saveFails()
+      changeQuest()
 
     }
   }, [isEnd]);
@@ -129,35 +115,45 @@ const Questions = ({ route }) => {
       })
 
       if (!response) {
-        setFailedQuests(prev => {
-          const updatedFails = test.fails.map((fail) => {
-            if (fail.index === question.index) {
-              return { ...fail, count: fail.count + 1 }; 
-            }
-            return fail;
-          });
-        
-          return [...prev, ...updatedFails, { ...question, count: 1 }];
-        });
-        
+        saveFails()
       }
-  
-      setTimeout(() => {
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 250,
-          easing: Easing.ease,
-          useNativeDriver: true,
-        }).start(() => {
-          if (Index < preguntas.length) {
-            navigation.navigate('AnswerQuestions', { Index: Index + 1, test, mode, orden });
-          } else {
-            navigation.navigate('QuestEnd', { test: route.params.test });
-          }
-        });
-      }, 500);
-    }
+      
+      changeQuest()
+      
   }
+}
+
+ function saveFails () {
+  setFailedQuests(prev => {
+    const existingFail = prev.find(fail => fail.index === question.index);
+
+    if (existingFail) {
+      return prev.map(fail => 
+        fail.index === question.index ? { ...fail, count: fail.count + 1 } : fail
+      );
+    } else {
+      return [...prev, { ...question, count: 1 }];
+    }
+  });
+
+ }
+
+function changeQuest () {
+  setTimeout(() => {
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 250,
+      easing: Easing.ease,
+      useNativeDriver: true,
+    }).start(() => {
+      if (Index < preguntas.length) {
+        navigation.navigate('AnswerQuestions', { Index: Index + 1, test, mode, orden });
+      } else {
+        navigation.navigate('QuestEnd', { test: route.params.test });
+      }
+    });
+  }, 500);
+}
   
   function calculateColor(index, isTrue) {
     if (responseColor.question == index && responseColor.isTrue) {
