@@ -15,6 +15,7 @@ import Categorias from './components/create/Categorias';
 import CustomHeader from './components/create/CustomHeader';
 import EditScreen from './components/edit/EditScreen'
 import CustomQuestionsHeader from './components/dashboard/CustomQuestionsHeader';
+import Response from './components/stats/Response';
 
 import LocalStorage from './localStorage/LocalStorage';
 import useColors from './utils/Colors';
@@ -99,6 +100,13 @@ const App = () => {
                     header: () => <Header title="Editar Examen" />,  // Usamos el componente personalizado
                     headerTransparent: true,
                   }}
+              />
+              <Stack.Screen
+                name="Response"
+                component={Response}
+               options={{
+                  header: () => <SecondHeader button={1} route={null} title="Tus Errores en el Examen" />,  // Usamos el componente personalizado
+                }}
               />
             </Stack.Navigator>
           </NavigationContainer>

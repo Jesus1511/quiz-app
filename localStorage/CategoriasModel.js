@@ -8,18 +8,18 @@ const CategoriasModel = () => {
   useEffect(() => {
     async function crearCategoria() {
       try {
-        //const storedCategorias = await AsyncStorage.getItem('categorias');
+        const storedCategorias = await AsyncStorage.getItem('categorias');
         
-        //if (!storedCategorias) {
+        if (!storedCategorias) {
           const newCategorias = [{value:"Matematicas", thereshold:0}, {value:"Leyes", thereshold:0}, {value:"Computación", thereshold:0}, {value:"Biologia", thereshold:0}, {value:"Castellano", thereshold:0}];
           await AsyncStorage.setItem('categorias', JSON.stringify(newCategorias));
 
           setCategorias(newCategorias);
 
 
-        //} else {
-        //  setCategorias(JSON.parse(storedCategorias));
-        //}
+        } else {
+          setCategorias(JSON.parse(storedCategorias));
+        }
         
       } catch (error) {
         console.log(error);

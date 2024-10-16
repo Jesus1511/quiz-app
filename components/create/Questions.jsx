@@ -18,7 +18,6 @@ const {width, height} = Dimensions.get('window')
 
 const Questions = ({route}) => {
 
-
     const { QuestIndex, isEditing } = route.params;
 
     const { questions, setQuestions} = useContext(AppContext)

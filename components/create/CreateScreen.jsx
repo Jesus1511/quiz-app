@@ -205,8 +205,8 @@ const CreateScreen = () => {
             <Text style={[styles.label, { color: Colors.text, marginBottom:15 }]}>Preguntas y Respuestas</Text>
               <TouchableOpacity onPress={() => setIsMenuOpen(true)} style={styles.questionsInput}>
                 {questions.length > 1 ? (
-                  <View style={{borderColor:Colors.label, height:57, borderWidth:1, borderRadius:10, paddingHorizontal:100, paddingVertical:10}}>
-                    <Text style={{ color: Colors.text, fontSize:20 }}>Preguntas: {questions.length}</Text>
+                  <View style={{borderColor:Colors.label, height:57, borderWidth:1, borderRadius:10, paddingHorizontal:80, paddingVertical:10}}>
+                    <Text style={{ color: Colors.text, fontSize:20, width:165, textAlign:"center"  }}>Preguntas: {questions.length}</Text>
                   </View>
                 ):(
                   <Text style={[styles.questionsText, { color: Colors.label }]}>Ingresar Preguntas +</Text>

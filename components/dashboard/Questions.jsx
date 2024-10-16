@@ -20,7 +20,7 @@ const Questions = ({ route }) => {
   const { setIntento, setFailedQuests } = useContext(AppContext)
 
   const isDark = useColorScheme() == 'dark';
-  const Colors = useColors(isDark);
+  const Colors = useColors(isDark)
   const navigation = useNavigation();
 
   const { Index, mode, orden, test } = route.params;
@@ -63,7 +63,7 @@ const Questions = ({ route }) => {
       playSound(false);
 
       setIntento((intento) => {
-        return [...intento, {isCorrect: false, time:test.tiempo}]
+        return [...intento, {isCorrect: false, response: null, time:test.tiempo}]
       })
 
       saveFails()
@@ -103,19 +103,20 @@ const Questions = ({ route }) => {
   }, [sound]);
 
   function handleResponse(response, index) {
+
     if (responseColor.question == null) {
       setRunning(false)
-      const newResponse = { question: index, isTrue: response };
+      const newResponse = { question: index, isTrue: response.isTrue };
       setResponseColor(newResponse);
   
-      playSound(response);
+      playSound(response.isTrue);
 
       setIntento((intento) => {
-        return [...intento, {isCorrect: newResponse.isTrue, time:currentTime}]
+        return [...intento, {isCorrect: newResponse.isTrue, response: newResponse, time:currentTime, }]
       })
 
-      if (!response) {
-        saveFails()
+      if (!response.isTrue) {
+        saveFails(response)
       }
       
       changeQuest()
@@ -123,16 +124,17 @@ const Questions = ({ route }) => {
   }
 }
 
- function saveFails () {
+ function saveFails (response) {
   setFailedQuests(prev => {
-    const existingFail = prev.find(fail => fail.index === question.index);
+    const existingFail = prev.find(fail => fail.index === QuestIndex);
+
 
     if (existingFail) {
       return prev.map(fail => 
-        fail.index === question.index ? { ...fail, count: fail.count + 1 } : fail
+        fail.index === question.index ? { ...fail, count: fail.count + 1, opcion: response.opcion } : fail
       );
     } else {
-      return [...prev, { ...question, count: 1 }];
+      return [...prev, { ...question, count: 1, index: QuestIndex, opcion: response.opcion }];
     }
   });
 
@@ -235,7 +237,7 @@ function changeQuest () {
           <View key={index} style={{ width, flexDirection: "row", alignItems: "top", justifyContent: "space-evenly" }}>
             <Text style={{ textAlign: "left", fontSize: 18, color: Colors.text, marginTop: 20, fontFamily: "Montserrat-Medium" }}>{alphabet[index]}</Text>
             <TouchableOpacity
-              onPress={() => handleResponse(opcion.isTrue, index)}
+              onPress={() => handleResponse(opcion, index)}
               style={[
                 styles.question,
                 { backgroundColor: calculateColor(index, opcion.isTrue) },

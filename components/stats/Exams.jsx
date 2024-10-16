@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View, useColorScheme } from 'react-native'
+import { StyleSheet, Text, View, useColorScheme, TouchableOpacity } from 'react-native'
 import React, { useContext } from 'react'
 import useColors from '../../utils/Colors'
 import { useState, useEffect } from 'react'
 import { AppContext } from '../../localStorage/LocalStorage'
 import { getBestTrys } from '../../utils/bestTry'
+import { useNavigation } from '@react-navigation/native'
 
 const Exams = () => {
 
@@ -11,6 +12,8 @@ const Exams = () => {
 
     const isDark = useColorScheme() == "dark"
     const Colors = useColors(isDark)
+
+    const navigation = useNavigation()
 
     const { tests } = useContext(AppContext)
 
@@ -34,15 +37,15 @@ const Exams = () => {
       </View>
       <View style={styles.examsContainer}>
         {doneExams?.map((exam, index) =>(
-            <View style={styles.exam} key={index}>
-
+            <TouchableOpacity onPress={() => navigation.navigate('Response', {exam:exam})} style={styles.exam} key={index}>
+                {console.log(exam)}
                 <Text style={styles.examName}>{exam.name}</Text>
 
                 <Text style={styles.examProps}>Categoria: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{exam.categoria}</Text></Text>
                 <Text style={styles.examProps}>Preguntas: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{exam.preguntas.length}</Text></Text>
                 <Text style={styles.examProps}>Mejor Tiempo: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{(getBestTrys(exam.intentos).bestTime).toFixed(2)} sg</Text></Text>
                 <Text style={styles.examProps}>Mejor Nota: <Text style={{color:Colors.text, fontFamily:"Montserrat-Medium"}}>{Math.ceil((getBestTrys(exam.intentos).bestScore * exam.preguntas.length) / 100)}/{exam.preguntas.length}</Text></Text>
-            </View>
+            </TouchableOpacity>
         ) )}
       </View>
     </View>
